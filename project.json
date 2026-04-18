@@ -1,0 +1,29 @@
+{
+  "overview": "A bold, editorial digital agency portfolio website inspired by locomotive.ca — featuring a hero, project portfolio with category filters, about/philosophy, services, blog, culture trips, merch store, and a dark footer. Built with black/white palette, serif typography, and smooth Motion.js animations.",
+  "features": [
+    "Hero section with editorial serif typography and scroll animation",
+    "Featured work portfolio with category filter tabs (All/Branding/Digital/Experience/E-commerce/Content)",
+    "Project detail pages with case study content",
+    "About/Philosophy section with agency manifesto",
+    "Services section with 4 core offerings",
+    "Articles/Blog section with static post cards and detail pages",
+    "Culture section with static trip cards",
+    "Store section with static merch items",
+    "Alternating dark/light sections throughout",
+    "Smooth hover effects and viewport scroll animations via Motion.js",
+    "Responsive design from mobile to 1400px desktop"
+  ],
+  "category": "portfolio",
+  "tags": [
+    "portfolio",
+    "agency",
+    "editorial",
+    "minimalist",
+    "black-white",
+    "animations",
+    "projects",
+    "blog",
+    "store"
+  ],
+  "last_updated": "2026-04-16T12:27:50.759Z"
+}

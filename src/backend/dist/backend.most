@@ -1,0 +1,23 @@
+// Version: 1.0.0
+type Nat__490723111 = Nat__920180692;
+type Nat__920180692 = Nat;
+type Project__19257312 =
+  {
+    awardsCount : Nat;
+    category : Text;
+    description : Text;
+    fullDescription : Text;
+    id : Text;
+    imageUrl : Text;
+    tags : [Text];
+    title : Text;
+    year : Nat
+  };
+actor {
+  stable projects :
+    {
+      var blockIndex : Nat__490723111;
+      var blocks : [var [var ?Project__19257312]];
+      var elementIndex : Nat__490723111
+    }
+};

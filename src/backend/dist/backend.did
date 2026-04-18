@@ -1,0 +1,17 @@
+type Project = 
+ record {
+   awardsCount: nat;
+   category: text;
+   description: text;
+   fullDescription: text;
+   id: text;
+   imageUrl: text;
+   tags: vec text;
+   title: text;
+   year: nat;
+ };
+service : {
+  getProject: (id: text) -> (opt Project) query;
+  getProjects: () -> (vec Project) query;
+  getProjectsByCategory: (category: text) -> (vec Project) query;
+}
