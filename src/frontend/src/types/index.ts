@@ -16,6 +16,7 @@ export interface Article {
   excerpt: string;
   date: string;
   author: string;
+  category: string;
   content: string;
 }
 

@@ -1,12 +1,29 @@
 import { useNavigate, useParams } from "@tanstack/react-router";
 import { ArrowLeft, Trophy } from "lucide-react";
-import { motion } from "motion/react";
+import { motion, useScroll, useTransform } from "motion/react";
+import { useRef } from "react";
+import { useCinematicScroll } from "../hooks/useCinematicScroll";
 import { useProject } from "../hooks/useProjects";
 
+const CUSTOM_EASE: [number, number, number, number] = [0.77, 0, 0.175, 1];
+const SPRING_CINEMATIC = {
+  type: "spring" as const,
+  stiffness: 300,
+  damping: 26,
+};
+
 export default function ProjectDetailPage() {
+  useCinematicScroll();
   const { id } = useParams({ from: "/projects/$id" });
   const navigate = useNavigate();
   const { data: project, isLoading } = useProject(id);
+  const imageRef = useRef<HTMLDivElement>(null);
+
+  const { scrollYProgress } = useScroll({
+    target: imageRef,
+    offset: ["start end", "end start"],
+  });
+  const imageParallaxY = useTransform(scrollYProgress, [0, 1], [-60, 60]);
 
   if (isLoading) {
     return (
@@ -44,8 +61,12 @@ export default function ProjectDetailPage() {
   }
 
   return (
-    <>
-      {/* Hero — dark section */}
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.6 }}
+    >
+      {/* Hero — dark section with dramatic entrance */}
       <section className="section-dark min-h-[60vh] flex flex-col justify-end px-6 md:px-16 pb-16 pt-32 relative overflow-hidden">
         {/* Subtle grid texture */}
         <div
@@ -66,7 +87,7 @@ export default function ProjectDetailPage() {
           <button
             onClick={() => navigate({ to: "/" })}
             type="button"
-            className="flex items-center gap-2 text-label text-primary-foreground/60 hover:text-primary-foreground transition-smooth"
+            className="flex items-center gap-2 text-label text-[#3d3d3d] hover:text-primary-foreground transition-smooth"
             data-ocid="project_detail.back_button"
             aria-label="Back to work"
           >
@@ -82,31 +103,42 @@ export default function ProjectDetailPage() {
           transition={{ duration: 0.5, delay: 0.1, ease: "easeOut" }}
           className="flex flex-wrap items-center gap-4 mb-6"
         >
-          <span
+          <motion.span
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ ...SPRING_CINEMATIC, delay: 0.15 }}
             className="text-label border border-primary-foreground/30 px-3 py-1 rounded-full"
             data-ocid="project_detail.category_tag"
           >
             {project.category}
-          </span>
-          <span className="text-label text-primary-foreground/50">
+          </motion.span>
+          <motion.span
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2, duration: 0.4 }}
+            className="text-label text-[#555555]"
+          >
             {project.year}
-          </span>
+          </motion.span>
           {project.awardsCount > 0 && (
-            <span
-              className="flex items-center gap-1.5 text-label text-primary-foreground/50"
+            <motion.span
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ ...SPRING_CINEMATIC, delay: 0.25 }}
+              className="flex items-center gap-1.5 text-label text-[#555555]"
               data-ocid="project_detail.awards_badge"
             >
               <Trophy size={12} strokeWidth={2} />
               {project.awardsCount} Award{project.awardsCount !== 1 ? "s" : ""}
-            </span>
+            </motion.span>
           )}
         </motion.div>
 
-        {/* Title */}
+        {/* Title — clip-path mask reveal */}
         <motion.h1
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+          initial={{ clipPath: "inset(0 100% 0 0)" }}
+          animate={{ clipPath: "inset(0 0% 0 0)" }}
+          transition={{ duration: 1.1, ease: CUSTOM_EASE, delay: 0.2 }}
           className="text-hero max-w-4xl leading-tight"
           data-ocid="project_detail.title"
         >
@@ -116,10 +148,10 @@ export default function ProjectDetailPage() {
         {/* Short description */}
         {project.description && (
           <motion.p
-            initial={{ opacity: 0, y: 16 }}
+            initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.35, ease: "easeOut" }}
-            className="mt-6 text-lg font-body text-primary-foreground/70 max-w-2xl"
+            transition={{ delay: 0.4, duration: 0.8 }}
+            className="mt-6 text-lg font-body text-[#2d2d2d] max-w-2xl"
             data-ocid="project_detail.description"
           >
             {project.description}
@@ -141,6 +173,25 @@ export default function ProjectDetailPage() {
         data-ocid="project_detail.body_section"
       >
         <div className="max-w-4xl mx-auto px-6 md:px-16">
+          {/* Project image with parallax */}
+          {project.imageUrl && (
+            <motion.div
+              ref={imageRef}
+              initial={{ opacity: 0, scale: 0.97 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true, margin: "-80px" }}
+              transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+              className="mb-12 rounded-xl overflow-hidden"
+              style={{ y: imageParallaxY }}
+            >
+              <img
+                src={project.imageUrl}
+                alt={project.title}
+                className="w-full h-auto object-cover"
+              />
+            </motion.div>
+          )}
+
           {/* Full description */}
           {project.fullDescription && (
             <motion.div
@@ -174,13 +225,17 @@ export default function ProjectDetailPage() {
                 data-ocid="project_detail.tags_list"
               >
                 {project.tags.map((tag, i) => (
-                  <span
+                  <motion.span
                     key={tag}
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    whileInView={{ opacity: 1, scale: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ ...SPRING_CINEMATIC, delay: i * 0.07 }}
                     className="text-sm font-body border border-border px-3 py-1 rounded-full text-foreground hover:bg-primary hover:text-primary-foreground transition-smooth cursor-default"
                     data-ocid={`project_detail.tag.${i + 1}`}
                   >
                     {tag}
-                  </span>
+                  </motion.span>
                 ))}
               </div>
             </motion.div>
@@ -206,6 +261,6 @@ export default function ProjectDetailPage() {
           </motion.div>
         </div>
       </section>
-    </>
+    </motion.div>
   );
 }

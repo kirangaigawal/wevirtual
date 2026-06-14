@@ -5283,10 +5283,10 @@ class wNAF {
    * @param W window size
    * @returns precomputed point tables flattened to a single array
    */
-  precomputeWindow(point, W2) {
+  precomputeWindow(point2, W2) {
     const { windows, windowSize } = calcWOpts(W2, this.bits);
     const points = [];
-    let p2 = point;
+    let p2 = point2;
     let base = p2;
     for (let window2 = 0; window2 < windows; window2++) {
       base = p2;
@@ -5345,27 +5345,27 @@ class wNAF {
     assert0(n);
     return acc;
   }
-  getPrecomputes(W2, point, transform) {
-    let comp = pointPrecomputes.get(point);
+  getPrecomputes(W2, point2, transform2) {
+    let comp = pointPrecomputes.get(point2);
     if (!comp) {
-      comp = this.precomputeWindow(point, W2);
+      comp = this.precomputeWindow(point2, W2);
       if (W2 !== 1) {
-        if (typeof transform === "function")
-          comp = transform(comp);
-        pointPrecomputes.set(point, comp);
+        if (typeof transform2 === "function")
+          comp = transform2(comp);
+        pointPrecomputes.set(point2, comp);
       }
     }
     return comp;
   }
-  cached(point, scalar, transform) {
-    const W2 = getW(point);
-    return this.wNAF(W2, this.getPrecomputes(W2, point, transform), scalar);
+  cached(point2, scalar, transform2) {
+    const W2 = getW(point2);
+    return this.wNAF(W2, this.getPrecomputes(W2, point2, transform2), scalar);
   }
-  unsafe(point, scalar, transform, prev) {
-    const W2 = getW(point);
+  unsafe(point2, scalar, transform2, prev) {
+    const W2 = getW(point2);
     if (W2 === 1)
-      return this._unsafeLadder(point, scalar, prev);
-    return this.wNAFUnsafe(W2, this.getPrecomputes(W2, point, transform), scalar, prev);
+      return this._unsafeLadder(point2, scalar, prev);
+    return this.wNAFUnsafe(W2, this.getPrecomputes(W2, point2, transform2), scalar, prev);
   }
   // We calculate precomputes for elliptic curve point multiplication
   // using windowed method. This specifies window size and
@@ -5379,8 +5379,8 @@ class wNAF {
     return getW(elm) !== 1;
   }
 }
-function mulEndoUnsafe(Point, point, k1, k2) {
-  let acc = point;
+function mulEndoUnsafe(Point, point2, k1, k2) {
+  let acc = point2;
   let p1 = Point.ZERO;
   let p2 = Point.ZERO;
   while (k1 > _0n$5 || k2 > _0n$5) {
@@ -5686,8 +5686,8 @@ function weierstrassN(params, extraOpts = {}) {
     if (!Fp3.isOdd)
       throw new Error("compression is not supported: Field does not have .isOdd()");
   }
-  function pointToBytes(_c2, point, isCompressed) {
-    const { x: x2, y: y2 } = point.toAffine();
+  function pointToBytes(_c2, point2, isCompressed) {
+    const { x: x2, y: y2 } = point2.toAffine();
     const bx = Fp3.toBytes(x2);
     _abool2(isCompressed, "isCompressed");
     if (isCompressed) {
@@ -5988,20 +5988,20 @@ function weierstrassN(params, extraOpts = {}) {
       const { endo: endo2 } = extraOpts;
       if (!Fn.isValidNot0(scalar))
         throw new Error("invalid scalar: out of range");
-      let point, fake;
+      let point2, fake;
       const mul = (n) => wnaf.cached(this, n, (p2) => normalizeZ(Point, p2));
       if (endo2) {
         const { k1neg, k1, k2neg, k2 } = splitEndoScalarN(scalar);
         const { p: k1p, f: k1f } = mul(k1);
         const { p: k2p, f: k2f } = mul(k2);
         fake = k1f.add(k2f);
-        point = finishEndo(endo2.beta, k1p, k2p, k1neg, k2neg);
+        point2 = finishEndo(endo2.beta, k1p, k2p, k1neg, k2neg);
       } else {
         const { p: p2, f } = mul(scalar);
-        point = p2;
+        point2 = p2;
         fake = f;
       }
-      return normalizeZ(Point, [point, fake])[0];
+      return normalizeZ(Point, [point2, fake])[0];
     }
     /**
      * Non-constant-time multiplication. Uses double-and-add algorithm.
@@ -6339,8 +6339,8 @@ function createBlsPairing(fields, G1, G2, params) {
     return { Rx, Ry, Rz };
   }
   const ATE_NAF = NAfDecomposition(ateLoopSize);
-  const calcPairingPrecomputes = memoized((point) => {
-    const p2 = point;
+  const calcPairingPrecomputes = memoized((point2) => {
+    const p2 = point2;
     const { x: x2, y: y2 } = p2.toAffine();
     const Qx = x2, Qy = y2, negQy = Fp22.neg(y2);
     let Rx = Qx, Ry = Qy, Rz = Fp22.ONE;
@@ -6402,11 +6402,11 @@ function createBlsPairing(fields, G1, G2, params) {
 }
 function createBlsSig(blsPairing, PubCurve, SigCurve, SignatureCoder, isSigG1) {
   const { Fp12: Fp122, pairingBatch } = blsPairing;
-  function normPub(point) {
-    return point instanceof PubCurve.Point ? point : PubCurve.Point.fromHex(point);
+  function normPub(point2) {
+    return point2 instanceof PubCurve.Point ? point2 : PubCurve.Point.fromHex(point2);
   }
-  function normSig(point) {
-    return point instanceof SigCurve.Point ? point : SigCurve.Point.fromHex(point);
+  function normSig(point2) {
+    return point2 instanceof SigCurve.Point ? point2 : SigCurve.Point.fromHex(point2);
   }
   function amsg(m2) {
     if (!(m2 instanceof SigCurve.Point))
@@ -6457,18 +6457,18 @@ function createBlsSig(blsPairing, PubCurve, SigCurve, SignatureCoder, isSigG1) {
       for (let i = 0; i < nPublicKeys.length; i++) {
         const pub = nPublicKeys[i];
         const msg = nMessages[i];
-        let keys = messagePubKeyMap.get(msg);
-        if (keys === void 0) {
-          keys = [];
-          messagePubKeyMap.set(msg, keys);
+        let keys2 = messagePubKeyMap.get(msg);
+        if (keys2 === void 0) {
+          keys2 = [];
+          messagePubKeyMap.set(msg, keys2);
         }
-        keys.push(pub);
+        keys2.push(pub);
       }
       const paired = [];
       const G2 = PubCurve.Point.BASE;
       try {
-        for (const [msg, keys] of messagePubKeyMap) {
-          const groupPublicKey = keys.reduce((acc, msg2) => acc.add(msg2));
+        for (const [msg, keys2] of messagePubKeyMap) {
+          const groupPublicKey = keys2.reduce((acc, msg2) => acc.add(msg2));
           paired.push(pair(groupPublicKey, msg));
         }
         paired.push(pair(G2.negate(), sig));
@@ -6534,11 +6534,11 @@ function bls(CURVE) {
   };
   const { ShortSignature } = CURVE.G1;
   const { Signature } = CURVE.G2;
-  function normP1Hash(point, htfOpts) {
-    return point instanceof G1.Point ? point : shortSignatures.hash(ensureBytes("point", point), htfOpts == null ? void 0 : htfOpts.DST);
+  function normP1Hash(point2, htfOpts) {
+    return point2 instanceof G1.Point ? point2 : shortSignatures.hash(ensureBytes("point", point2), htfOpts == null ? void 0 : htfOpts.DST);
   }
-  function normP2Hash(point, htfOpts) {
-    return point instanceof G2.Point ? point : longSignatures.hash(ensureBytes("point", point), htfOpts == null ? void 0 : htfOpts.DST);
+  function normP2Hash(point2, htfOpts) {
+    return point2 instanceof G2.Point ? point2 : longSignatures.hash(ensureBytes("point", point2), htfOpts == null ? void 0 : htfOpts.DST);
   }
   function getPublicKey(privateKey) {
     return longSignatures.getPublicKey(privateKey).toBytes(true);
@@ -7391,10 +7391,10 @@ function setMask(bytes, mask2) {
     bytes[0] |= 32;
   return bytes;
 }
-function pointG1ToBytes(_c2, point, isComp) {
+function pointG1ToBytes(_c2, point2, isComp) {
   const { BYTES: L2, ORDER: P2 } = Fp$1;
-  const is0 = point.is0();
-  const { x: x2, y: y2 } = point.toAffine();
+  const is0 = point2.is0();
+  const { x: x2, y: y2 } = point2.toAffine();
   if (isComp) {
     if (is0)
       return COMPZERO.slice();
@@ -7408,11 +7408,11 @@ function pointG1ToBytes(_c2, point, isComp) {
     }
   }
 }
-function signatureG1ToBytes(point) {
-  point.assertValidity();
+function signatureG1ToBytes(point2) {
+  point2.assertValidity();
   const { BYTES: L2, ORDER: P2 } = Fp$1;
-  const { x: x2, y: y2 } = point.toAffine();
-  if (point.is0())
+  const { x: x2, y: y2 } = point2.toAffine();
+  if (point2.is0())
     return COMPZERO.slice();
   const sort = Boolean(y2 * _2n$2 / P2);
   return setMask(numberToBytesBE(x2, L2), { compressed: true, sort });
@@ -7463,14 +7463,14 @@ function signatureG1FromBytes(hex2) {
   const aflag = BigInt(sort);
   if (y2 * _2n$2 / P2 !== aflag)
     y2 = Fp$1.neg(y2);
-  const point = Point.fromAffine({ x: x2, y: y2 });
-  point.assertValidity();
-  return point;
+  const point2 = Point.fromAffine({ x: x2, y: y2 });
+  point2.assertValidity();
+  return point2;
 }
-function pointG2ToBytes(_c2, point, isComp) {
+function pointG2ToBytes(_c2, point2, isComp) {
   const { BYTES: L2, ORDER: P2 } = Fp$1;
-  const is0 = point.is0();
-  const { x: x2, y: y2 } = point.toAffine();
+  const is0 = point2.is0();
+  const { x: x2, y: y2 } = point2.toAffine();
   if (isComp) {
     if (is0)
       return concatBytes(COMPZERO, numberToBytesBE(_0n$1, L2));
@@ -7484,12 +7484,12 @@ function pointG2ToBytes(_c2, point, isComp) {
     return concatBytes(numberToBytesBE(x1, L2), numberToBytesBE(x0, L2), numberToBytesBE(y1, L2), numberToBytesBE(y0, L2));
   }
 }
-function signatureG2ToBytes(point) {
-  point.assertValidity();
+function signatureG2ToBytes(point2) {
+  point2.assertValidity();
   const { BYTES: L2 } = Fp$1;
-  if (point.is0())
+  if (point2.is0())
     return concatBytes(COMPZERO, numberToBytesBE(_0n$1, L2));
-  const { x: x2, y: y2 } = point.toAffine();
+  const { x: x2, y: y2 } = point2.toAffine();
   const { re: x0, im: x1 } = Fp2.reim(x2);
   const { re: y0, im: y1 } = Fp2.reim(y2);
   const tmp = y1 > _0n$1 ? y1 * _2n$2 : y0 * _2n$2;
@@ -7561,9 +7561,9 @@ function signatureG2FromBytes(hex2) {
   const is0 = y1 === _0n$1 && y0 * _2n$2 / P2 !== aflag1;
   if (isGreater || is0)
     y3 = Fp2.neg(y3);
-  const point = Point.fromAffine({ x: x3, y: y3 });
-  point.assertValidity();
-  return point;
+  const point2 = Point.fromAffine({ x: x3, y: y3 });
+  point2.assertValidity();
+  return point2;
 }
 const bls12_381 = bls({
   // Fields
@@ -7585,17 +7585,17 @@ const bls12_381 = bls({
     // point.isTorsionFree() should return true for valid points
     // It returns false for shitty points.
     // https://eprint.iacr.org/2021/1130.pdf
-    isTorsionFree: (c2, point) => {
+    isTorsionFree: (c2, point2) => {
       const beta = BigInt("0x5f19672fdf76ce51ba69c6076a0f77eaddb3a93be6f89688de17d813620a00022e01fffffffefffe");
-      const phi = new c2(Fp$1.mul(point.X, beta), point.Y, point.Z);
-      const xP = point.multiplyUnsafe(BLS_X).negate();
+      const phi = new c2(Fp$1.mul(point2.X, beta), point2.Y, point2.Z);
+      const xP = point2.multiplyUnsafe(BLS_X).negate();
       const u2P = xP.multiplyUnsafe(BLS_X);
       return u2P.equals(phi);
     },
     // Clear cofactor of G1
     // https://eprint.iacr.org/2019/403
-    clearCofactor: (_c2, point) => {
-      return point.multiplyUnsafe(BLS_X).add(point);
+    clearCofactor: (_c2, point2) => {
+      return point2.multiplyUnsafe(BLS_X).add(point2);
     },
     mapToCurve: mapToG1,
     fromBytes: pointG1FromBytes,
@@ -7608,14 +7608,14 @@ const bls12_381 = bls({
       fromHex(hex2) {
         return signatureG1FromBytes(hex2);
       },
-      toBytes(point) {
-        return signatureG1ToBytes(point);
+      toBytes(point2) {
+        return signatureG1ToBytes(point2);
       },
-      toRawBytes(point) {
-        return signatureG1ToBytes(point);
+      toRawBytes(point2) {
+        return signatureG1ToBytes(point2);
       },
-      toHex(point) {
-        return bytesToHex(signatureG1ToBytes(point));
+      toHex(point2) {
+        return bytesToHex(signatureG1ToBytes(point2));
       }
     }
   },
@@ -7665,14 +7665,14 @@ const bls12_381 = bls({
       fromHex(hex2) {
         return signatureG2FromBytes(hex2);
       },
-      toBytes(point) {
-        return signatureG2ToBytes(point);
+      toBytes(point2) {
+        return signatureG2ToBytes(point2);
       },
-      toRawBytes(point) {
-        return signatureG2ToBytes(point);
+      toRawBytes(point2) {
+        return signatureG2ToBytes(point2);
       },
-      toHex(point) {
-        return bytesToHex(signatureG2ToBytes(point));
+      toHex(point2) {
+        return bytesToHex(signatureG2ToBytes(point2));
       }
     }
   },
@@ -8768,9 +8768,9 @@ function eddsa(Point, cHash, eddsaOpts = {}) {
   }
   function getExtendedPublicKey(secretKey) {
     const { head, prefix: prefix2, scalar } = getPrivateScalar(secretKey);
-    const point = BASE.multiply(scalar);
-    const pointBytes = point.toBytes();
-    return { head, prefix: prefix2, scalar, point, pointBytes };
+    const point2 = BASE.multiply(scalar);
+    const pointBytes = point2.toBytes();
+    return { head, prefix: prefix2, scalar, point: point2, pointBytes };
   }
   function getPublicKey(secretKey) {
     return getExtendedPublicKey(secretKey).pointBytes;
@@ -8877,8 +8877,8 @@ function eddsa(Point, cHash, eddsaOpts = {}) {
     /** @deprecated */
     randomPrivateKey: randomSecretKey,
     /** @deprecated */
-    precompute(windowSize = 8, point = Point.BASE) {
-      return point.precompute(windowSize, false);
+    precompute(windowSize = 8, point2 = Point.BASE) {
+      return point2.precompute(windowSize, false);
     }
   };
   return Object.freeze({
@@ -14847,8 +14847,8 @@ class IdleManager {
       };
     };
     if (options == null ? void 0 : options.captureScroll) {
-      const scroll = debounce(_resetTimer, (options == null ? void 0 : options.scrollDebounce) ?? 100);
-      window.addEventListener("scroll", scroll, true);
+      const scroll2 = debounce(_resetTimer, (options == null ? void 0 : options.scrollDebounce) ?? 100);
+      window.addEventListener("scroll", scroll2, true);
     }
     _resetTimer();
   }
@@ -17212,7 +17212,7 @@ function sanitizeURL(url) {
   return isJavaScriptProtocol.test("" + url) ? "javascript:throw new Error('React has blocked a javascript: URL as a security precaution.')" : url;
 }
 var currentReplayingEvent = null;
-function getEventTarget(nativeEvent) {
+function getEventTarget$1(nativeEvent) {
   nativeEvent = nativeEvent.target || nativeEvent.srcElement || window;
   nativeEvent.correspondingUseElement && (nativeEvent = nativeEvent.correspondingUseElement);
   return 3 === nativeEvent.nodeType ? nativeEvent.parentNode : nativeEvent;
@@ -17670,7 +17670,7 @@ function handlePropertyChange(nativeEvent) {
       dispatchQueue,
       activeElementInst$1,
       nativeEvent,
-      getEventTarget(nativeEvent)
+      getEventTarget$1(nativeEvent)
     );
     batchedUpdates$1(runEventInBatch, dispatchQueue);
   }
@@ -24764,7 +24764,7 @@ function dispatchEventForPluginEventSystem(domEventName, eventSystemFlags, nativ
       targetInst$jscomp$0 = targetInst$jscomp$0.return;
     }
   batchedUpdates$1(function() {
-    var targetInst = ancestorInst, nativeEventTarget = getEventTarget(nativeEvent), dispatchQueue = [];
+    var targetInst = ancestorInst, nativeEventTarget = getEventTarget$1(nativeEvent), dispatchQueue = [];
     a: {
       var reactName = topLevelEventsToReactNames.get(domEventName);
       if (void 0 !== reactName) {
@@ -26771,7 +26771,7 @@ function dispatchEvent(domEventName, eventSystemFlags, targetContainer, nativeEv
   }
 }
 function findInstanceBlockingEvent(nativeEvent) {
-  nativeEvent = getEventTarget(nativeEvent);
+  nativeEvent = getEventTarget$1(nativeEvent);
   return findInstanceBlockingTarget(nativeEvent);
 }
 var return_targetInst = null;
@@ -27956,18 +27956,18 @@ function replaceEqualDeep(prev, _next) {
   return prevSize === nextSize && equalItems === prevSize ? prev : copy;
 }
 function getEnumerableOwnKeys(o2) {
-  const keys = [];
+  const keys2 = [];
   const names = Object.getOwnPropertyNames(o2);
   for (const name of names) {
     if (!Object.prototype.propertyIsEnumerable.call(o2, name)) return false;
-    keys.push(name);
+    keys2.push(name);
   }
   const symbols = Object.getOwnPropertySymbols(o2);
   for (const symbol of symbols) {
     if (!Object.prototype.propertyIsEnumerable.call(o2, symbol)) return false;
-    keys.push(symbol);
+    keys2.push(symbol);
   }
-  return keys;
+  return keys2;
 }
 function isPlainObject(o2) {
   if (!hasObjectPrototype(o2)) {
@@ -32574,11 +32574,64 @@ const createLucideIcon = (iconName, iconNode) => {
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$5 = [
+const __iconNode$9 = [
   ["path", { d: "M12 5v14", key: "s699le" }],
   ["path", { d: "m19 12-7 7-7-7", key: "1idqje" }]
 ];
-const ArrowDown = createLucideIcon("arrow-down", __iconNode$5);
+const ArrowDown = createLucideIcon("arrow-down", __iconNode$9);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$8 = [
+  ["path", { d: "m12 19-7-7 7-7", key: "1l729n" }],
+  ["path", { d: "M19 12H5", key: "x3x0zl" }]
+];
+const ArrowLeft = createLucideIcon("arrow-left", __iconNode$8);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$7 = [
+  ["path", { d: "M5 12h14", key: "1ays0h" }],
+  ["path", { d: "m12 5 7 7-7 7", key: "xquz4c" }]
+];
+const ArrowRight = createLucideIcon("arrow-right", __iconNode$7);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$6 = [
+  ["ellipse", { cx: "12", cy: "5", rx: "9", ry: "3", key: "msslwz" }],
+  ["path", { d: "M3 5V19A9 3 0 0 0 21 19V5", key: "1wlel7" }],
+  ["path", { d: "M3 12A9 3 0 0 0 21 12", key: "mv7ke4" }]
+];
+const Database = createLucideIcon("database", __iconNode$6);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$5 = [
+  ["line", { x1: "22", x2: "2", y1: "12", y2: "12", key: "1y58io" }],
+  [
+    "path",
+    {
+      d: "M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z",
+      key: "oot6mr"
+    }
+  ],
+  ["line", { x1: "6", x2: "6.01", y1: "16", y2: "16", key: "sgf278" }],
+  ["line", { x1: "10", x2: "10.01", y1: "16", y2: "16", key: "1l4acy" }]
+];
+const HardDrive = createLucideIcon("hard-drive", __iconNode$5);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -32586,10 +32639,11 @@ const ArrowDown = createLucideIcon("arrow-down", __iconNode$5);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$4 = [
-  ["path", { d: "m12 19-7-7 7-7", key: "1l729n" }],
-  ["path", { d: "M19 12H5", key: "x3x0zl" }]
+  ["path", { d: "M4 12h16", key: "1lakjw" }],
+  ["path", { d: "M4 18h16", key: "19g7jn" }],
+  ["path", { d: "M4 6h16", key: "1o0s65" }]
 ];
-const ArrowLeft = createLucideIcon("arrow-left", __iconNode$4);
+const Menu = createLucideIcon("menu", __iconNode$4);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -32597,10 +32651,10 @@ const ArrowLeft = createLucideIcon("arrow-left", __iconNode$4);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$3 = [
-  ["path", { d: "M5 12h14", key: "1ays0h" }],
-  ["path", { d: "m12 5 7 7-7 7", key: "xquz4c" }]
+  ["path", { d: "m21 21-4.34-4.34", key: "14j7rj" }],
+  ["circle", { cx: "11", cy: "11", r: "8", key: "4ej97u" }]
 ];
-const ArrowRight = createLucideIcon("arrow-right", __iconNode$3);
+const Search = createLucideIcon("search", __iconNode$3);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -32608,11 +32662,15 @@ const ArrowRight = createLucideIcon("arrow-right", __iconNode$3);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$2 = [
-  ["path", { d: "M4 12h16", key: "1lakjw" }],
-  ["path", { d: "M4 18h16", key: "19g7jn" }],
-  ["path", { d: "M4 6h16", key: "1o0s65" }]
+  [
+    "path",
+    {
+      d: "M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z",
+      key: "oel41y"
+    }
+  ]
 ];
-const Menu = createLucideIcon("menu", __iconNode$2);
+const Shield = createLucideIcon("shield", __iconNode$2);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -32642,14 +32700,30 @@ const X = createLucideIcon("x", __iconNode);
 const NAV_LINKS = [
   { label: "Work", href: "/" },
   { label: "About", href: "/#about" },
-  { label: "Articles", href: "/#articles" },
-  { label: "Store", href: "/#store" }
+  { label: "Services", href: "/services" },
+  { label: "Blog", href: "/blog" },
+  { label: "Clients", href: "/#clients" },
+  { label: "Our World", href: "/#culture" },
+  { label: "Contact Us", href: "/#contact" }
 ];
 function Header() {
   const [menuOpen, setMenuOpen] = reactExports.useState(false);
   const [scrolled, setScrolled] = reactExports.useState(false);
+  const [navHidden, setNavHidden] = reactExports.useState(false);
+  const router2 = useRouter();
+  const headerRef = reactExports.useRef(null);
+  const lastScrollY = reactExports.useRef(0);
   reactExports.useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 40);
+    const handleScroll = () => {
+      const currentY = window.scrollY;
+      setScrolled(currentY > 50);
+      if (currentY > 100) {
+        setNavHidden(currentY > lastScrollY.current);
+      } else {
+        setNavHidden(false);
+      }
+      lastScrollY.current = currentY;
+    };
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
@@ -32657,14 +32731,25 @@ function Header() {
     setMenuOpen(false);
     if (href.startsWith("/#")) {
       const id2 = href.replace("/#", "");
-      const el = document.getElementById(id2);
-      if (el) el.scrollIntoView({ behavior: "smooth" });
+      const isHome = router2.state.location.pathname === "/";
+      if (!isHome) {
+        router2.navigate({ to: "/" }).then(() => {
+          setTimeout(() => {
+            const el = document.getElementById(id2);
+            if (el) el.scrollIntoView({ behavior: "smooth" });
+          }, 100);
+        });
+      } else {
+        const el = document.getElementById(id2);
+        if (el) el.scrollIntoView({ behavior: "smooth" });
+      }
     }
   };
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(
     "header",
     {
-      className: `fixed top-0 left-0 right-0 z-50 transition-smooth ${scrolled ? "bg-background/95 backdrop-blur-sm border-b border-border" : "bg-transparent"}`,
+      ref: headerRef,
+      className: `fixed top-0 left-0 right-0 z-50 transition-all duration-400 ${scrolled ? "bg-[#fff4e4]/92 backdrop-blur-sm border-b border-black/10 shadow-sm" : "bg-transparent"} ${navHidden ? "nav-hidden" : "nav-visible"}`,
       "data-ocid": "header",
       children: [
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "max-w-screen-xl mx-auto px-6 md:px-10 flex items-center justify-between h-16 md:h-20", children: [
@@ -32672,9 +32757,16 @@ function Header() {
             Link,
             {
               to: "/",
-              className: "font-display font-bold text-lg md:text-xl tracking-tight text-foreground hover:opacity-70 transition-smooth",
+              className: "hover:opacity-80 transition-smooth flex items-center",
               "data-ocid": "header.logo_link",
-              children: "WeVirtual"
+              children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                "img",
+                {
+                  src: "/assets/images/wevirtual-logo-new.png",
+                  alt: "WeVirtual",
+                  style: { height: "48px", width: "auto", background: "transparent" }
+                }
+              )
             }
           ),
           /* @__PURE__ */ jsxRuntimeExports.jsx(
@@ -32692,8 +32784,8 @@ function Header() {
                       handleNavClick(link.href);
                     }
                   },
-                  className: "text-label text-foreground hover:opacity-50 transition-smooth",
-                  "data-ocid": `header.nav.${link.label.toLowerCase()}_link`,
+                  className: "nav-link text-label text-foreground hover:opacity-50 transition-smooth",
+                  "data-ocid": `header.nav.${link.label.toLowerCase().replace(/\s/g, "_")}_link`,
                   children: link.label
                 },
                 link.label
@@ -32715,7 +32807,7 @@ function Header() {
         menuOpen && /* @__PURE__ */ jsxRuntimeExports.jsx(
           "div",
           {
-            className: "md:hidden bg-background border-t border-border px-6 py-6 flex flex-col gap-5",
+            className: "md:hidden bg-[#fff4e4]/92 border-t border-black/10 px-6 py-6 flex flex-col gap-5",
             "data-ocid": "header.mobile_menu",
             children: NAV_LINKS.map((link) => /* @__PURE__ */ jsxRuntimeExports.jsx(
               "a",
@@ -32726,7 +32818,7 @@ function Header() {
                   handleNavClick(link.href);
                 },
                 className: "text-label text-foreground hover:opacity-50 transition-smooth",
-                "data-ocid": `header.mobile_nav.${link.label.toLowerCase()}_link`,
+                "data-ocid": `header.mobile_nav.${link.label.toLowerCase().replace(/\s/g, "_")}_link`,
                 children: link.label
               },
               link.label
@@ -32747,27 +32839,31 @@ function Footer() {
     {
       className: "py-12 px-6 md:px-10 border-t",
       style: {
-        background: "#ffe0a8",
+        background: "linear-gradient(160deg, #ffe8c4 0%, #ffd8a0 100%)",
         borderColor: "rgba(0,0,0,0.10)",
         color: "#111111"
       },
       "data-ocid": "footer",
       children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "max-w-screen-xl mx-auto flex flex-col md:flex-row items-start justify-between gap-10", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-1", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-display font-bold text-xl mb-1 text-black", children: "WeVirtual" }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
-            "p",
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mb-2", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+            "img",
             {
-              className: "text-sm font-body",
-              style: { color: "rgba(0,0,0,0.55)" },
-              children: "Media Asset Management — Offline LTO & Cloud"
+              src: "/assets/images/wevirtual-logo-new.png",
+              alt: "WeVirtual",
+              style: {
+                height: "60px",
+                width: "auto",
+                background: "transparent"
+              }
             }
-          ),
+          ) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-sm font-body", style: { color: "#333333" }, children: "Media Asset Management — Offline LTO & Cloud" }),
           /* @__PURE__ */ jsxRuntimeExports.jsxs(
             "p",
             {
               className: "text-xs font-body mt-3 leading-relaxed",
-              style: { color: "rgba(0,0,0,0.48)" },
+              style: { color: "#444444" },
               children: [
                 "Web Emerging Technologies Pvt Ltd",
                 /* @__PURE__ */ jsxRuntimeExports.jsx("br", {}),
@@ -32777,57 +32873,104 @@ function Footer() {
               ]
             }
           ),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-xs font-body mt-1", style: { color: "#444444" }, children: "Contact: Sharad Deshmukh" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-xs font-body", style: { color: "#444444" }, children: "Mobile: 9823312123, 9769295026" })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex flex-col items-start md:items-end gap-2 md:mt-1", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-xs font-body", style: { color: "#444444" }, children: [
+          "© ",
+          year,
+          ".",
+          " ",
           /* @__PURE__ */ jsxRuntimeExports.jsx(
-            "p",
+            "a",
             {
-              className: "text-xs font-body mt-1",
-              style: { color: "rgba(0,0,0,0.48)" },
-              children: "Contact: Sharad Deshmukh"
-            }
-          ),
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
-            "p",
-            {
-              className: "text-xs font-body",
-              style: { color: "rgba(0,0,0,0.48)" },
-              children: "Mobile: 9823312123, 9769295026"
+              href: `https://caffeine.ai?utm_source=caffeine-footer&utm_medium=referral&utm_content=${hostname}`,
+              target: "_blank",
+              rel: "noopener noreferrer",
+              className: "transition-smooth hover:text-black",
+              "data-ocid": "footer.caffeine_link",
+              children: "Built with love using caffeine.ai"
             }
           )
-        ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex flex-col items-start md:items-end gap-2 md:mt-1", children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
-          "p",
-          {
-            className: "text-xs font-body",
-            style: { color: "rgba(0,0,0,0.45)" },
-            children: [
-              "© ",
-              year,
-              ".",
-              " ",
-              /* @__PURE__ */ jsxRuntimeExports.jsx(
-                "a",
-                {
-                  href: `https://caffeine.ai?utm_source=caffeine-footer&utm_medium=referral&utm_content=${hostname}`,
-                  target: "_blank",
-                  rel: "noopener noreferrer",
-                  className: "transition-smooth hover:text-black",
-                  "data-ocid": "footer.caffeine_link",
-                  children: "Built with love using caffeine.ai"
-                }
-              )
-            ]
-          }
-        ) })
+        ] }) })
       ] })
     }
   );
 }
+const WATERMARK_OFFSETS = [
+  "10vh",
+  "110vh",
+  "210vh",
+  "310vh",
+  "410vh",
+  "510vh",
+  "610vh",
+  "710vh",
+  "810vh",
+  "910vh"
+];
 function Layout({ children }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "min-h-screen flex flex-col bg-background text-foreground", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx(Header, {}),
-    /* @__PURE__ */ jsxRuntimeExports.jsx("main", { className: "flex-1 pt-16 md:pt-20", children }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(Footer, {})
-  ] });
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    "div",
+    {
+      className: "min-h-screen flex flex-col",
+      style: {
+        background: "linear-gradient(160deg, #fff8ee 0%, #fff0d8 40%, #ffe4b8 100%)",
+        position: "relative"
+      },
+      children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "div",
+          {
+            "aria-hidden": "true",
+            style: {
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "100%",
+              zIndex: 0,
+              pointerEvents: "none",
+              userSelect: "none",
+              overflow: "hidden"
+            },
+            children: WATERMARK_OFFSETS.map((top) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "img",
+              {
+                src: "/assets/images/wevirtual-logo-new.png",
+                alt: "",
+                "aria-hidden": "true",
+                style: {
+                  position: "absolute",
+                  top,
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                  width: "65vw",
+                  maxWidth: "850px",
+                  height: "auto",
+                  opacity: 0.16,
+                  pointerEvents: "none",
+                  userSelect: "none",
+                  objectFit: "contain"
+                }
+              },
+              top
+            ))
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Header, {}),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "main",
+          {
+            className: "flex-1 pt-16 md:pt-20 page-enter",
+            style: { position: "relative", zIndex: 1 },
+            children
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Footer, {})
+      ]
+    }
+  );
 }
 const LayoutGroupContext = reactExports.createContext({});
 function useConstant(init) {
@@ -33058,7 +33201,7 @@ function createRenderStep(runNextFrame, stepName) {
   };
   return step;
 }
-const maxElapsed = 40;
+const maxElapsed$1 = 40;
 function createRenderBatcher(scheduleNextBatch, allowKeepAlive) {
   let runNextFrame = false;
   let useDefaultElapsed = true;
@@ -33078,7 +33221,7 @@ function createRenderBatcher(scheduleNextBatch, allowKeepAlive) {
     const timestamp = useManualTiming ? state.timestamp : performance.now();
     runNextFrame = false;
     if (!useManualTiming) {
-      state.delta = useDefaultElapsed ? 1e3 / 60 : Math.max(Math.min(timestamp - state.timestamp, maxElapsed), 1);
+      state.delta = useDefaultElapsed ? 1e3 / 60 : Math.max(Math.min(timestamp - state.timestamp, maxElapsed$1), 1);
     }
     state.timestamp = timestamp;
     state.isProcessing = true;
@@ -33649,8 +33792,8 @@ function findSpring({ duration = springDefaults.duration, bounce = springDefault
 }
 const durationKeys = ["duration", "bounce"];
 const physicsKeys = ["stiffness", "damping", "mass"];
-function isSpringType(options, keys) {
-  return keys.some((key) => options[key] !== void 0);
+function isSpringType(options, keys2) {
+  return keys2.some((key) => options[key] !== void 0);
 }
 function getSpringOptions(options) {
   let springOptions = {
@@ -33904,7 +34047,7 @@ function fillOffset(offset, remaining) {
     offset.push(mixNumber$1(min, 1, offsetProgress));
   }
 }
-function defaultOffset(arr) {
+function defaultOffset$1(arr) {
   const offset = [0];
   fillOffset(offset, arr.length - 1);
   return offset;
@@ -33924,7 +34067,7 @@ function keyframes({ duration = 300, keyframes: keyframeValues, times, ease: eas
   const absoluteTimes = convertOffsetToTimes(
     // Only use the provided offsets if they're the correct length
     // TODO Maybe we should warn here if there's a length mismatch
-    times && times.length === keyframeValues.length ? times : defaultOffset(keyframeValues),
+    times && times.length === keyframeValues.length ? times : defaultOffset$1(keyframeValues),
     duration
   );
   const mapTimeToKeyframe = interpolate(absoluteTimes, keyframeValues, {
@@ -34315,18 +34458,18 @@ const matrix3dParsers = {
 function defaultTransformValue(name) {
   return name.includes("scale") ? 1 : 0;
 }
-function parseValueFromTransform(transform, name) {
-  if (!transform || transform === "none") {
+function parseValueFromTransform(transform2, name) {
+  if (!transform2 || transform2 === "none") {
     return defaultTransformValue(name);
   }
-  const matrix3dMatch = transform.match(/^matrix3d\(([-\d.e\s,]+)\)$/u);
+  const matrix3dMatch = transform2.match(/^matrix3d\(([-\d.e\s,]+)\)$/u);
   let parsers;
   let match;
   if (matrix3dMatch) {
     parsers = matrix3dParsers;
     match = matrix3dMatch;
   } else {
-    const matrix2dMatch = transform.match(/^matrix\(([-\d.e\s,]+)\)$/u);
+    const matrix2dMatch = transform2.match(/^matrix\(([-\d.e\s,]+)\)$/u);
     parsers = matrix2dParsers;
     match = matrix2dMatch;
   }
@@ -34338,8 +34481,8 @@ function parseValueFromTransform(transform, name) {
   return typeof valueParser === "function" ? valueParser(values) : values[valueParser];
 }
 const readTransformValue = (instance, name) => {
-  const { transform = "none" } = getComputedStyle(instance);
-  return parseValueFromTransform(transform, name);
+  const { transform: transform2 = "none" } = getComputedStyle(instance);
+  return parseValueFromTransform(transform2, name);
 };
 function convertTransformToNumber(value) {
   return parseFloat(value.trim());
@@ -34393,8 +34536,8 @@ const positionalValues = {
   bottom: ({ y: y2 }, { top }) => parseFloat(top) + (y2.max - y2.min),
   right: ({ x: x2 }, { left }) => parseFloat(left) + (x2.max - x2.min),
   // Transform
-  x: (_bbox, { transform }) => parseValueFromTransform(transform, "x"),
-  y: (_bbox, { transform }) => parseValueFromTransform(transform, "y")
+  x: (_bbox, { transform: transform2 }) => parseValueFromTransform(transform2, "x"),
+  y: (_bbox, { transform: transform2 }) => parseValueFromTransform(transform2, "y")
 };
 positionalValues.translateX = positionalValues.x;
 positionalValues.translateY = positionalValues.y;
@@ -34533,6 +34676,7 @@ function memoSupports(callback, supportsFlag) {
   return () => supportsFlags[supportsFlag] ?? memoized2();
 }
 const supportsScrollTimeline = /* @__PURE__ */ memoSupports(() => window.ScrollTimeline !== void 0, "scrollTimeline");
+const supportsViewTimeline = /* @__PURE__ */ memoSupports(() => window.ViewTimeline !== void 0, "viewTimeline");
 const supportsLinearEasing = /* @__PURE__ */ memoSupports(() => {
   try {
     document.createElement("div").animate({ opacity: 0 }, { easing: "linear(0, 1)" });
@@ -35225,6 +35369,9 @@ const MAX_VELOCITY_DELTA = 30;
 const isFloat = (value) => {
   return !isNaN(parseFloat(value));
 };
+const collectMotionValues = {
+  current: void 0
+};
 class MotionValue {
   /**
    * @param init - The initiating value
@@ -35402,6 +35549,9 @@ class MotionValue {
    * @public
    */
   get() {
+    if (collectMotionValues.current) {
+      collectMotionValues.current.push(this);
+    }
     return this.current;
   }
   /**
@@ -35937,7 +36087,7 @@ function resolveElements(elementOrSelector, scope, selectorCache) {
     return [elementOrSelector];
   } else if (typeof elementOrSelector === "string") {
     let root2 = document;
-    const elements = (selectorCache == null ? void 0 : selectorCache[elementOrSelector]) ?? root2.querySelectorAll(elementOrSelector);
+    const elements = root2.querySelectorAll(elementOrSelector);
     return elements ? Array.from(elements) : [];
   }
   return Array.from(elementOrSelector).filter((element) => element != null);
@@ -36246,8 +36396,105 @@ function resizeWindow(callback) {
 function resize(a2, b2) {
   return typeof a2 === "function" ? resizeWindow(a2) : resizeElement(a2, b2);
 }
+function observeTimeline(update, timeline) {
+  let prevProgress;
+  const onFrame = () => {
+    const { currentTime } = timeline;
+    const percentage = currentTime === null ? 0 : currentTime.value;
+    const progress2 = percentage / 100;
+    if (prevProgress !== progress2) {
+      update(progress2);
+    }
+    prevProgress = progress2;
+  };
+  frame.preUpdate(onFrame, true);
+  return () => cancelFrame(onFrame);
+}
 function isSVGSVGElement(element) {
   return isSVGElement(element) && element.tagName === "svg";
+}
+function transform(...args) {
+  const useImmediate = !Array.isArray(args[0]);
+  const argOffset = useImmediate ? 0 : -1;
+  const inputValue = args[0 + argOffset];
+  const inputRange = args[1 + argOffset];
+  const outputRange = args[2 + argOffset];
+  const options = args[3 + argOffset];
+  const interpolator = interpolate(inputRange, outputRange, options);
+  return useImmediate ? interpolator(inputValue) : interpolator;
+}
+function attachFollow(value, source, options = {}) {
+  const initialValue = value.get();
+  let activeAnimation = null;
+  let latestValue = initialValue;
+  let latestSetter;
+  const unit = typeof initialValue === "string" ? initialValue.replace(/[\d.-]/g, "") : void 0;
+  const stopAnimation = () => {
+    if (activeAnimation) {
+      activeAnimation.stop();
+      activeAnimation = null;
+    }
+    value.animation = void 0;
+  };
+  const startAnimation = () => {
+    const currentValue = asNumber$1(value.get());
+    const targetValue = asNumber$1(latestValue);
+    if (currentValue === targetValue) {
+      stopAnimation();
+      return;
+    }
+    const velocity = activeAnimation ? activeAnimation.getGeneratorVelocity() : value.getVelocity();
+    stopAnimation();
+    activeAnimation = new JSAnimation({
+      keyframes: [currentValue, targetValue],
+      velocity,
+      // Default to spring if no type specified (matches useSpring behavior)
+      type: "spring",
+      restDelta: 1e-3,
+      restSpeed: 0.01,
+      ...options,
+      onUpdate: latestSetter
+    });
+  };
+  const scheduleAnimation = () => {
+    var _a3;
+    startAnimation();
+    value.animation = activeAnimation ?? void 0;
+    (_a3 = value["events"].animationStart) == null ? void 0 : _a3.notify();
+    activeAnimation == null ? void 0 : activeAnimation.then(() => {
+      var _a4;
+      value.animation = void 0;
+      (_a4 = value["events"].animationComplete) == null ? void 0 : _a4.notify();
+    });
+  };
+  value.attach((v2, set) => {
+    latestValue = v2;
+    latestSetter = (latest) => set(parseValue(latest, unit));
+    frame.postRender(scheduleAnimation);
+  }, stopAnimation);
+  if (isMotionValue(source)) {
+    let skipNextAnimation = options.skipInitialAnimation === true;
+    const removeSourceOnChange = source.on("change", (v2) => {
+      if (skipNextAnimation) {
+        skipNextAnimation = false;
+        value.jump(parseValue(v2, unit), false);
+      } else {
+        value.set(parseValue(v2, unit));
+      }
+    });
+    const removeValueOnDestroy = value.on("destroy", removeSourceOnChange);
+    return () => {
+      removeSourceOnChange();
+      removeValueOnDestroy();
+    };
+  }
+  return stopAnimation;
+}
+function parseValue(v2, unit) {
+  return unit ? v2 + unit : v2;
+}
+function asNumber$1(v2) {
+  return typeof v2 === "number" ? v2 : parseFloat(v2);
 }
 const valueTypes = [...dimensionValueTypes, color, complex];
 const findValueType = (v2) => valueTypes.find(testValueType(v2));
@@ -36780,11 +37027,11 @@ function convertBoundingBoxToBox({ top, left, right, bottom }) {
 function convertBoxToBoundingBox({ x: x2, y: y2 }) {
   return { top: y2.min, right: x2.max, bottom: y2.max, left: x2.min };
 }
-function transformBoxPoints(point, transformPoint2) {
+function transformBoxPoints(point2, transformPoint2) {
   if (!transformPoint2)
-    return point;
-  const topLeft = transformPoint2({ x: point.left, y: point.top });
-  const bottomRight = transformPoint2({ x: point.right, y: point.bottom });
+    return point2;
+  const topLeft = transformPoint2({ x: point2.left, y: point2.top });
+  const bottomRight = transformPoint2({ x: point2.right, y: point2.bottom });
   return {
     top: topLeft.y,
     left: topLeft.x,
@@ -36807,16 +37054,16 @@ function has2DTranslate(values) {
 function is2DTranslate(value) {
   return value && value !== "0%";
 }
-function scalePoint(point, scale2, originPoint) {
-  const distanceFromOrigin = point - originPoint;
+function scalePoint(point2, scale2, originPoint) {
+  const distanceFromOrigin = point2 - originPoint;
   const scaled = scale2 * distanceFromOrigin;
   return originPoint + scaled;
 }
-function applyPointDelta(point, translate, scale2, originPoint, boxScale) {
+function applyPointDelta(point2, translate, scale2, originPoint, boxScale) {
   if (boxScale !== void 0) {
-    point = scalePoint(point, boxScale, originPoint);
+    point2 = scalePoint(point2, boxScale, originPoint);
   }
-  return scalePoint(point, scale2, originPoint) + translate;
+  return scalePoint(point2, scale2, originPoint) + translate;
 }
 function applyAxisDelta(axis, translate = 0, scale2 = 1, originPoint, boxScale) {
   axis.min = applyPointDelta(axis.min, translate, scale2, originPoint, boxScale);
@@ -36877,20 +37124,20 @@ function resolveAxisTranslate(value, axis) {
   }
   return value;
 }
-function transformBox(box, transform, sourceBox) {
+function transformBox(box, transform2, sourceBox) {
   const resolveBox = sourceBox ?? box;
-  transformAxis(box.x, resolveAxisTranslate(transform.x, resolveBox.x), transform.scaleX, transform.scale, transform.originX);
-  transformAxis(box.y, resolveAxisTranslate(transform.y, resolveBox.y), transform.scaleY, transform.scale, transform.originY);
+  transformAxis(box.x, resolveAxisTranslate(transform2.x, resolveBox.x), transform2.scaleX, transform2.scale, transform2.originX);
+  transformAxis(box.y, resolveAxisTranslate(transform2.y, resolveBox.y), transform2.scaleY, transform2.scale, transform2.originY);
 }
 function measureViewportBox(instance, transformPoint2) {
   return convertBoundingBoxToBox(transformBoxPoints(instance.getBoundingClientRect(), transformPoint2));
 }
 function measurePageBox(element, rootProjectionNode2, transformPagePoint) {
   const viewportBox = measureViewportBox(element, transformPagePoint);
-  const { scroll } = rootProjectionNode2;
-  if (scroll) {
-    translateAxis(viewportBox.x, scroll.offset.x);
-    translateAxis(viewportBox.y, scroll.offset.y);
+  const { scroll: scroll2 } = rootProjectionNode2;
+  if (scroll2) {
+    translateAxis(viewportBox.x, scroll2.offset.x);
+    translateAxis(viewportBox.y, scroll2.offset.y);
   }
   return viewportBox;
 }
@@ -36901,7 +37148,7 @@ const translateAlias = {
   transformPerspective: "perspective"
 };
 const numTransforms = transformPropOrder.length;
-function buildTransform(latestValues, transform, transformTemplate) {
+function buildTransform(latestValues, transform2, transformTemplate) {
   let transformString = "";
   let transformIsDefault = true;
   for (let i = 0; i < numTransforms; i++) {
@@ -36924,13 +37171,13 @@ function buildTransform(latestValues, transform, transformTemplate) {
         transformString += `${transformName}(${valueAsType}) `;
       }
       if (transformTemplate) {
-        transform[key] = valueAsType;
+        transform2[key] = valueAsType;
       }
     }
   }
   transformString = transformString.trim();
   if (transformTemplate) {
-    transformString = transformTemplate(transform, transformIsDefault ? "" : transformString);
+    transformString = transformTemplate(transform2, transformIsDefault ? "" : transformString);
   } else if (transformIsDefault) {
     transformString = "none";
   }
@@ -37094,9 +37341,9 @@ const camelKeys = {
 };
 function buildSVGPath(attrs, length, spacing = 1, offset = 0, useDashCase = true) {
   attrs.pathLength = 1;
-  const keys = useDashCase ? dashKeys : camelKeys;
-  attrs[keys.offset] = `${-offset}`;
-  attrs[keys.array] = `${length} ${spacing}`;
+  const keys2 = useDashCase ? dashKeys : camelKeys;
+  attrs[keys2.offset] = `${-offset}`;
+  attrs[keys2.array] = `${length} ${spacing}`;
 }
 const cssMotionPathProperties = [
   "offsetDistance",
@@ -37534,13 +37781,13 @@ function calcRelativePosition(target, layout2, parent, anchor) {
   calcRelativeAxisPosition(target.x, layout2.x, parent.x, anchor == null ? void 0 : anchor.x);
   calcRelativeAxisPosition(target.y, layout2.y, parent.y, anchor == null ? void 0 : anchor.y);
 }
-function removePointDelta(point, translate, scale2, originPoint, boxScale) {
-  point -= translate;
-  point = scalePoint(point, 1 / scale2, originPoint);
+function removePointDelta(point2, translate, scale2, originPoint, boxScale) {
+  point2 -= translate;
+  point2 = scalePoint(point2, 1 / scale2, originPoint);
   if (boxScale !== void 0) {
-    point = scalePoint(point, 1 / boxScale, originPoint);
+    point2 = scalePoint(point2, 1 / boxScale, originPoint);
   }
-  return point;
+  return point2;
 }
 function removeAxisDelta(axis, translate = 0, scale2 = 1, origin = 0.5, boxScale, originAxis = axis, sourceAxis = axis) {
   if (percent.test(translate)) {
@@ -37593,37 +37840,37 @@ function eachAxis(callback) {
   return [callback("x"), callback("y")];
 }
 function buildProjectionTransform(delta, treeScale, latestTransform) {
-  let transform = "";
+  let transform2 = "";
   const xTranslate = delta.x.translate / treeScale.x;
   const yTranslate = delta.y.translate / treeScale.y;
   const zTranslate = (latestTransform == null ? void 0 : latestTransform.z) || 0;
   if (xTranslate || yTranslate || zTranslate) {
-    transform = `translate3d(${xTranslate}px, ${yTranslate}px, ${zTranslate}px) `;
+    transform2 = `translate3d(${xTranslate}px, ${yTranslate}px, ${zTranslate}px) `;
   }
   if (treeScale.x !== 1 || treeScale.y !== 1) {
-    transform += `scale(${1 / treeScale.x}, ${1 / treeScale.y}) `;
+    transform2 += `scale(${1 / treeScale.x}, ${1 / treeScale.y}) `;
   }
   if (latestTransform) {
     const { transformPerspective, rotate: rotate2, rotateX, rotateY, skewX, skewY } = latestTransform;
     if (transformPerspective)
-      transform = `perspective(${transformPerspective}px) ${transform}`;
+      transform2 = `perspective(${transformPerspective}px) ${transform2}`;
     if (rotate2)
-      transform += `rotate(${rotate2}deg) `;
+      transform2 += `rotate(${rotate2}deg) `;
     if (rotateX)
-      transform += `rotateX(${rotateX}deg) `;
+      transform2 += `rotateX(${rotateX}deg) `;
     if (rotateY)
-      transform += `rotateY(${rotateY}deg) `;
+      transform2 += `rotateY(${rotateY}deg) `;
     if (skewX)
-      transform += `skewX(${skewX}deg) `;
+      transform2 += `skewX(${skewX}deg) `;
     if (skewY)
-      transform += `skewY(${skewY}deg) `;
+      transform2 += `skewY(${skewY}deg) `;
   }
   const elementScaleX = delta.x.scale * treeScale.x;
   const elementScaleY = delta.y.scale * treeScale.y;
   if (elementScaleX !== 1 || elementScaleY !== 1) {
-    transform += `scale(${elementScaleX}, ${elementScaleY})`;
+    transform2 += `scale(${elementScaleX}, ${elementScaleY})`;
   }
-  return transform || "none";
+  return transform2 || "none";
 }
 const borderLabels = [
   "borderTopLeftRadius",
@@ -38215,10 +38462,10 @@ function createProjectionNode$1({ attachResizeListener, defaultParent, measureSc
       const box = visualElement.measureViewportBox();
       const wasInScrollRoot = ((_a3 = this.scroll) == null ? void 0 : _a3.wasRoot) || this.path.some(checkNodeWasScrollRoot);
       if (!wasInScrollRoot) {
-        const { scroll } = this.root;
-        if (scroll) {
-          translateAxis(box.x, scroll.offset.x);
-          translateAxis(box.y, scroll.offset.y);
+        const { scroll: scroll2 } = this.root;
+        if (scroll2) {
+          translateAxis(box.x, scroll2.offset.x);
+          translateAxis(box.y, scroll2.offset.y);
         }
       }
       return box;
@@ -38232,13 +38479,13 @@ function createProjectionNode$1({ attachResizeListener, defaultParent, measureSc
       }
       for (let i = 0; i < this.path.length; i++) {
         const node = this.path[i];
-        const { scroll, options } = node;
-        if (node !== this.root && scroll && options.layoutScroll) {
-          if (scroll.wasRoot) {
+        const { scroll: scroll2, options } = node;
+        if (node !== this.root && scroll2 && options.layoutScroll) {
+          if (scroll2.wasRoot) {
             copyBoxInto(boxWithoutScroll, box);
           }
-          translateAxis(boxWithoutScroll.x, scroll.offset.x);
-          translateAxis(boxWithoutScroll.y, scroll.offset.y);
+          translateAxis(boxWithoutScroll.x, scroll2.offset.x);
+          translateAxis(boxWithoutScroll.y, scroll2.offset.y);
         }
       }
       return boxWithoutScroll;
@@ -38684,11 +38931,11 @@ function createProjectionNode$1({ attachResizeListener, defaultParent, measureSc
       targetStyle.visibility = "";
       const valuesToRender = lead.animationValues || lead.latestValues;
       this.applyTransformsToTarget();
-      let transform = buildProjectionTransform(this.projectionDeltaWithTransform, this.treeScale, valuesToRender);
+      let transform2 = buildProjectionTransform(this.projectionDeltaWithTransform, this.treeScale, valuesToRender);
       if (transformTemplate) {
-        transform = transformTemplate(valuesToRender, transform);
+        transform2 = transformTemplate(valuesToRender, transform2);
       }
-      targetStyle.transform = transform;
+      targetStyle.transform = transform2;
       const { x: x2, y: y2 } = this.projectionDelta;
       targetStyle.transformOrigin = `${x2.origin * 100}% ${y2.origin * 100}% 0`;
       if (lead.animationValues) {
@@ -38700,7 +38947,7 @@ function createProjectionNode$1({ attachResizeListener, defaultParent, measureSc
         if (valuesToRender[key] === void 0)
           continue;
         const { correct, applyTo, isCSSVariable } = scaleCorrectors[key];
-        const corrected = transform === "none" ? valuesToRender[key] : correct(valuesToRender[key], lead);
+        const corrected = transform2 === "none" ? valuesToRender[key] : correct(valuesToRender[key], lead);
         if (applyTo) {
           const num = applyTo.length;
           for (let i = 0; i < num; i++) {
@@ -38939,6 +39186,155 @@ const MotionConfigContext = reactExports.createContext({
   isStatic: false,
   reducedMotion: "never"
 });
+function setRef(ref, value) {
+  if (typeof ref === "function") {
+    return ref(value);
+  } else if (ref !== null && ref !== void 0) {
+    ref.current = value;
+  }
+}
+function composeRefs(...refs) {
+  return (node) => {
+    let hasCleanup = false;
+    const cleanups = refs.map((ref) => {
+      const cleanup = setRef(ref, node);
+      if (!hasCleanup && typeof cleanup === "function") {
+        hasCleanup = true;
+      }
+      return cleanup;
+    });
+    if (hasCleanup) {
+      return () => {
+        for (let i = 0; i < cleanups.length; i++) {
+          const cleanup = cleanups[i];
+          if (typeof cleanup === "function") {
+            cleanup();
+          } else {
+            setRef(refs[i], null);
+          }
+        }
+      };
+    }
+  };
+}
+function useComposedRefs(...refs) {
+  return reactExports.useCallback(composeRefs(...refs), refs);
+}
+class PopChildMeasure extends reactExports.Component {
+  getSnapshotBeforeUpdate(prevProps) {
+    const element = this.props.childRef.current;
+    if (isHTMLElement(element) && prevProps.isPresent && !this.props.isPresent && this.props.pop !== false) {
+      const parent = element.offsetParent;
+      const parentWidth = isHTMLElement(parent) ? parent.offsetWidth || 0 : 0;
+      const parentHeight = isHTMLElement(parent) ? parent.offsetHeight || 0 : 0;
+      const computedStyle = getComputedStyle(element);
+      const size = this.props.sizeRef.current;
+      size.height = parseFloat(computedStyle.height);
+      size.width = parseFloat(computedStyle.width);
+      size.top = element.offsetTop;
+      size.left = element.offsetLeft;
+      size.right = parentWidth - size.width - size.left;
+      size.bottom = parentHeight - size.height - size.top;
+    }
+    return null;
+  }
+  /**
+   * Required with getSnapshotBeforeUpdate to stop React complaining.
+   */
+  componentDidUpdate() {
+  }
+  render() {
+    return this.props.children;
+  }
+}
+function PopChild({ children, isPresent, anchorX, anchorY, root: root2, pop: pop2 }) {
+  var _a3;
+  const id2 = reactExports.useId();
+  const ref = reactExports.useRef(null);
+  const size = reactExports.useRef({
+    width: 0,
+    height: 0,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0
+  });
+  const { nonce } = reactExports.useContext(MotionConfigContext);
+  const childRef = ((_a3 = children.props) == null ? void 0 : _a3.ref) ?? (children == null ? void 0 : children.ref);
+  const composedRef = useComposedRefs(ref, childRef);
+  reactExports.useInsertionEffect(() => {
+    const { width, height, top, left, right, bottom } = size.current;
+    if (isPresent || pop2 === false || !ref.current || !width || !height)
+      return;
+    const x2 = anchorX === "left" ? `left: ${left}` : `right: ${right}`;
+    const y2 = anchorY === "bottom" ? `bottom: ${bottom}` : `top: ${top}`;
+    ref.current.dataset.motionPopId = id2;
+    const style2 = document.createElement("style");
+    if (nonce)
+      style2.nonce = nonce;
+    const parent = root2 ?? document.head;
+    parent.appendChild(style2);
+    if (style2.sheet) {
+      style2.sheet.insertRule(`
+          [data-motion-pop-id="${id2}"] {
+            position: absolute !important;
+            width: ${width}px !important;
+            height: ${height}px !important;
+            ${x2}px !important;
+            ${y2}px !important;
+          }
+        `);
+    }
+    return () => {
+      var _a4;
+      (_a4 = ref.current) == null ? void 0 : _a4.removeAttribute("data-motion-pop-id");
+      if (parent.contains(style2)) {
+        parent.removeChild(style2);
+      }
+    };
+  }, [isPresent]);
+  return jsxRuntimeExports.jsx(PopChildMeasure, { isPresent, childRef: ref, sizeRef: size, pop: pop2, children: pop2 === false ? children : reactExports.cloneElement(children, { ref: composedRef }) });
+}
+const PresenceChild = ({ children, initial, isPresent, onExitComplete, custom, presenceAffectsLayout, mode, anchorX, anchorY, root: root2 }) => {
+  const presenceChildren = useConstant(newChildrenMap);
+  const id2 = reactExports.useId();
+  let isReusedContext = true;
+  let context = reactExports.useMemo(() => {
+    isReusedContext = false;
+    return {
+      id: id2,
+      initial,
+      isPresent,
+      custom,
+      onExitComplete: (childId) => {
+        presenceChildren.set(childId, true);
+        for (const isComplete of presenceChildren.values()) {
+          if (!isComplete)
+            return;
+        }
+        onExitComplete && onExitComplete();
+      },
+      register: (childId) => {
+        presenceChildren.set(childId, false);
+        return () => presenceChildren.delete(childId);
+      }
+    };
+  }, [isPresent, presenceChildren, onExitComplete]);
+  if (presenceAffectsLayout && isReusedContext) {
+    context = { ...context };
+  }
+  reactExports.useMemo(() => {
+    presenceChildren.forEach((_2, key) => presenceChildren.set(key, false));
+  }, [isPresent]);
+  reactExports.useEffect(() => {
+    !isPresent && !presenceChildren.size && onExitComplete && onExitComplete();
+  }, [isPresent]);
+  children = jsxRuntimeExports.jsx(PopChild, { pop: mode === "popLayout", isPresent, anchorX, anchorY, root: root2, children });
+  return jsxRuntimeExports.jsx(PresenceContext.Provider, { value: context, children });
+};
+function newChildrenMap() {
+  return /* @__PURE__ */ new Map();
+}
 function usePresence(subscribe2 = true) {
   const context = reactExports.useContext(PresenceContext);
   if (context === null)
@@ -38953,6 +39349,87 @@ function usePresence(subscribe2 = true) {
   const safeToRemove = reactExports.useCallback(() => subscribe2 && onExitComplete && onExitComplete(id2), [id2, onExitComplete, subscribe2]);
   return !isPresent && onExitComplete ? [false, safeToRemove] : [true];
 }
+const getChildKey = (child) => child.key || "";
+function onlyElements(children) {
+  const filtered = [];
+  reactExports.Children.forEach(children, (child) => {
+    if (reactExports.isValidElement(child))
+      filtered.push(child);
+  });
+  return filtered;
+}
+const AnimatePresence = ({ children, custom, initial = true, onExitComplete, presenceAffectsLayout = true, mode = "sync", propagate = false, anchorX = "left", anchorY = "top", root: root2 }) => {
+  const [isParentPresent, safeToRemove] = usePresence(propagate);
+  const presentChildren = reactExports.useMemo(() => onlyElements(children), [children]);
+  const presentKeys = propagate && !isParentPresent ? [] : presentChildren.map(getChildKey);
+  const isInitialRender = reactExports.useRef(true);
+  const pendingPresentChildren = reactExports.useRef(presentChildren);
+  const exitComplete = useConstant(() => /* @__PURE__ */ new Map());
+  const exitingComponents = reactExports.useRef(/* @__PURE__ */ new Set());
+  const [diffedChildren, setDiffedChildren] = reactExports.useState(presentChildren);
+  const [renderedChildren, setRenderedChildren] = reactExports.useState(presentChildren);
+  useIsomorphicLayoutEffect(() => {
+    isInitialRender.current = false;
+    pendingPresentChildren.current = presentChildren;
+    for (let i = 0; i < renderedChildren.length; i++) {
+      const key = getChildKey(renderedChildren[i]);
+      if (!presentKeys.includes(key)) {
+        if (exitComplete.get(key) !== true) {
+          exitComplete.set(key, false);
+        }
+      } else {
+        exitComplete.delete(key);
+        exitingComponents.current.delete(key);
+      }
+    }
+  }, [renderedChildren, presentKeys.length, presentKeys.join("-")]);
+  const exitingChildren = [];
+  if (presentChildren !== diffedChildren) {
+    let nextChildren = [...presentChildren];
+    for (let i = 0; i < renderedChildren.length; i++) {
+      const child = renderedChildren[i];
+      const key = getChildKey(child);
+      if (!presentKeys.includes(key)) {
+        nextChildren.splice(i, 0, child);
+        exitingChildren.push(child);
+      }
+    }
+    if (mode === "wait" && exitingChildren.length) {
+      nextChildren = exitingChildren;
+    }
+    setRenderedChildren(onlyElements(nextChildren));
+    setDiffedChildren(presentChildren);
+    return null;
+  }
+  const { forceRender } = reactExports.useContext(LayoutGroupContext);
+  return jsxRuntimeExports.jsx(jsxRuntimeExports.Fragment, { children: renderedChildren.map((child) => {
+    const key = getChildKey(child);
+    const isPresent = propagate && !isParentPresent ? false : presentChildren === renderedChildren || presentKeys.includes(key);
+    const onExit = () => {
+      if (exitingComponents.current.has(key)) {
+        return;
+      }
+      if (exitComplete.has(key)) {
+        exitingComponents.current.add(key);
+        exitComplete.set(key, true);
+      } else {
+        return;
+      }
+      let isEveryExitComplete = true;
+      exitComplete.forEach((isExitComplete) => {
+        if (!isExitComplete)
+          isEveryExitComplete = false;
+      });
+      if (isEveryExitComplete) {
+        forceRender == null ? void 0 : forceRender();
+        setRenderedChildren(pendingPresentChildren.current);
+        propagate && (safeToRemove == null ? void 0 : safeToRemove());
+        onExitComplete && onExitComplete();
+      }
+    };
+    return jsxRuntimeExports.jsx(PresenceChild, { isPresent, initial: !isInitialRender.current || initial ? void 0 : false, custom, presenceAffectsLayout, mode, root: root2, onExitComplete: isPresent ? void 0 : onExit, anchorX, anchorY, children: child }, key);
+  }) });
+};
 const LazyContext = reactExports.createContext({ strict: false });
 const featureProps = {
   animation: [
@@ -39627,9 +40104,9 @@ class PanSession {
       const isDistancePastThreshold = distance2D(info2.offset, { x: 0, y: 0 }) >= this.distanceThreshold;
       if (!isPanStarted && !isDistancePastThreshold)
         return;
-      const { point: point2 } = info2;
+      const { point: point3 } = info2;
       const { timestamp: timestamp2 } = frameData;
-      this.history.push({ ...point2, timestamp: timestamp2 });
+      this.history.push({ ...point3, timestamp: timestamp2 });
       const { onStart, onMove } = this.handlers;
       if (!isPanStarted) {
         onStart && onStart(this.lastMoveEvent, info2);
@@ -39666,9 +40143,9 @@ class PanSession {
     this.contextWindow = contextWindow || window;
     const info = extractEventInfo(event);
     const initialInfo = transformPoint(info, this.transformPagePoint);
-    const { point } = initialInfo;
+    const { point: point2 } = initialInfo;
     const { timestamp } = frameData;
-    this.history = [{ ...point, timestamp }];
+    this.history = [{ ...point2, timestamp }];
     const { onSessionStart } = handlers;
     onSessionStart && onSessionStart(event, getPanInfo(initialInfo, this.history));
     this.removeListeners = pipe(addPointerEvent(this.contextWindow, "pointermove", this.handlePointerMove), addPointerEvent(this.contextWindow, "pointerup", this.handlePointerUp), addPointerEvent(this.contextWindow, "pointercancel", this.handlePointerUp));
@@ -39754,11 +40231,11 @@ function transformPoint(info, transformPagePoint) {
 function subtractPoint(a2, b2) {
   return { x: a2.x - b2.x, y: a2.y - b2.y };
 }
-function getPanInfo({ point }, history) {
+function getPanInfo({ point: point2 }, history) {
   return {
-    point,
-    delta: subtractPoint(point, lastDevicePoint(history)),
-    offset: subtractPoint(point, startDevicePoint(history)),
+    point: point2,
+    delta: subtractPoint(point2, lastDevicePoint(history)),
+    offset: subtractPoint(point2, startDevicePoint(history)),
     velocity: getVelocity(history, 0.1)
   };
 }
@@ -39804,13 +40281,13 @@ function getVelocity(history, timeDelta) {
   }
   return currentVelocity;
 }
-function applyConstraints(point, { min, max }, elastic) {
-  if (min !== void 0 && point < min) {
-    point = elastic ? mixNumber$1(min, point, elastic.min) : Math.max(point, min);
-  } else if (max !== void 0 && point > max) {
-    point = elastic ? mixNumber$1(max, point, elastic.max) : Math.min(point, max);
+function applyConstraints(point2, { min, max }, elastic) {
+  if (min !== void 0 && point2 < min) {
+    point2 = elastic ? mixNumber$1(min, point2, elastic.min) : Math.max(point2, min);
+  } else if (max !== void 0 && point2 > max) {
+    point2 = elastic ? mixNumber$1(max, point2, elastic.max) : Math.min(point2, max);
   }
-  return point;
+  return point2;
 }
 function calcRelativeAxisConstraints(axis, min, max) {
   return {
@@ -40138,7 +40615,7 @@ class VisualElementDragControls {
     const externalMotionValue = props[dragKey];
     return externalMotionValue ? externalMotionValue : this.visualElement.getValue(axis, (props.initial ? props.initial[axis] : void 0) || 0);
   }
-  snapToCursor(point) {
+  snapToCursor(point2) {
     eachAxis((axis) => {
       const { drag: drag2 } = this.getProps();
       if (!shouldDrag(axis, drag2, this.currentDirection))
@@ -40148,7 +40625,7 @@ class VisualElementDragControls {
       if (projection && projection.layout) {
         const { min, max } = projection.layout.layoutBox[axis];
         const current = axisValue.get() || 0;
-        axisValue.set(point[axis] - mixNumber$1(min, max, 0.5) + current);
+        axisValue.set(point2[axis] - mixNumber$1(min, max, 0.5) + current);
       }
     });
   }
@@ -40668,108 +41145,989 @@ const featureBundle = {
   ...layout
 };
 const motion = /* @__PURE__ */ createMotionProxy(featureBundle, createDomVisualElement);
+function canUseNativeTimeline(target) {
+  if (typeof window === "undefined")
+    return false;
+  return target ? supportsViewTimeline() : supportsScrollTimeline();
+}
+const maxElapsed = 50;
+const createAxisInfo = () => ({
+  current: 0,
+  offset: [],
+  progress: 0,
+  scrollLength: 0,
+  targetOffset: 0,
+  targetLength: 0,
+  containerLength: 0,
+  velocity: 0
+});
+const createScrollInfo = () => ({
+  time: 0,
+  x: createAxisInfo(),
+  y: createAxisInfo()
+});
+const keys = {
+  x: {
+    length: "Width",
+    position: "Left"
+  },
+  y: {
+    length: "Height",
+    position: "Top"
+  }
+};
+function updateAxisInfo(element, axisName, info, time2) {
+  const axis = info[axisName];
+  const { length, position } = keys[axisName];
+  const prev = axis.current;
+  const prevTime = info.time;
+  axis.current = Math.abs(element[`scroll${position}`]);
+  axis.scrollLength = element[`scroll${length}`] - element[`client${length}`];
+  axis.offset.length = 0;
+  axis.offset[0] = 0;
+  axis.offset[1] = axis.scrollLength;
+  axis.progress = /* @__PURE__ */ progress(0, axis.scrollLength, axis.current);
+  const elapsed = time2 - prevTime;
+  axis.velocity = elapsed > maxElapsed ? 0 : velocityPerSecond(axis.current - prev, elapsed);
+}
+function updateScrollInfo(element, info, time2) {
+  updateAxisInfo(element, "x", info, time2);
+  updateAxisInfo(element, "y", info, time2);
+  info.time = time2;
+}
+function calcInset(element, container) {
+  const inset = { x: 0, y: 0 };
+  let current = element;
+  while (current && current !== container) {
+    if (isHTMLElement(current)) {
+      inset.x += current.offsetLeft;
+      inset.y += current.offsetTop;
+      current = current.offsetParent;
+    } else if (current.tagName === "svg") {
+      const svgBoundingBox = current.getBoundingClientRect();
+      current = current.parentElement;
+      const parentBoundingBox = current.getBoundingClientRect();
+      inset.x += svgBoundingBox.left - parentBoundingBox.left;
+      inset.y += svgBoundingBox.top - parentBoundingBox.top;
+    } else if (current instanceof SVGGraphicsElement) {
+      const { x: x2, y: y2 } = current.getBBox();
+      inset.x += x2;
+      inset.y += y2;
+      let svg = null;
+      let parent = current.parentNode;
+      while (!svg) {
+        if (parent.tagName === "svg") {
+          svg = parent;
+        }
+        parent = current.parentNode;
+      }
+      current = svg;
+    } else {
+      break;
+    }
+  }
+  return inset;
+}
+const namedEdges = {
+  start: 0,
+  center: 0.5,
+  end: 1
+};
+function resolveEdge(edge, length, inset = 0) {
+  let delta = 0;
+  if (edge in namedEdges) {
+    edge = namedEdges[edge];
+  }
+  if (typeof edge === "string") {
+    const asNumber2 = parseFloat(edge);
+    if (edge.endsWith("px")) {
+      delta = asNumber2;
+    } else if (edge.endsWith("%")) {
+      edge = asNumber2 / 100;
+    } else if (edge.endsWith("vw")) {
+      delta = asNumber2 / 100 * document.documentElement.clientWidth;
+    } else if (edge.endsWith("vh")) {
+      delta = asNumber2 / 100 * document.documentElement.clientHeight;
+    } else {
+      edge = asNumber2;
+    }
+  }
+  if (typeof edge === "number") {
+    delta = length * edge;
+  }
+  return inset + delta;
+}
+const defaultOffset = [0, 0];
+function resolveOffset(offset, containerLength, targetLength, targetInset) {
+  let offsetDefinition = Array.isArray(offset) ? offset : defaultOffset;
+  let targetPoint = 0;
+  let containerPoint = 0;
+  if (typeof offset === "number") {
+    offsetDefinition = [offset, offset];
+  } else if (typeof offset === "string") {
+    offset = offset.trim();
+    if (offset.includes(" ")) {
+      offsetDefinition = offset.split(" ");
+    } else {
+      offsetDefinition = [offset, namedEdges[offset] ? offset : `0`];
+    }
+  }
+  targetPoint = resolveEdge(offsetDefinition[0], targetLength, targetInset);
+  containerPoint = resolveEdge(offsetDefinition[1], containerLength);
+  return targetPoint - containerPoint;
+}
+const ScrollOffset = {
+  Enter: [
+    [0, 1],
+    [1, 1]
+  ],
+  Exit: [
+    [0, 0],
+    [1, 0]
+  ],
+  Any: [
+    [1, 0],
+    [0, 1]
+  ],
+  All: [
+    [0, 0],
+    [1, 1]
+  ]
+};
+const point = { x: 0, y: 0 };
+function getTargetSize(target) {
+  return "getBBox" in target && target.tagName !== "svg" ? target.getBBox() : { width: target.clientWidth, height: target.clientHeight };
+}
+function resolveOffsets(container, info, options) {
+  const { offset: offsetDefinition = ScrollOffset.All } = options;
+  const { target = container, axis = "y" } = options;
+  const lengthLabel = axis === "y" ? "height" : "width";
+  const inset = target !== container ? calcInset(target, container) : point;
+  const targetSize = target === container ? { width: container.scrollWidth, height: container.scrollHeight } : getTargetSize(target);
+  const containerSize = {
+    width: container.clientWidth,
+    height: container.clientHeight
+  };
+  info[axis].offset.length = 0;
+  let hasChanged = !info[axis].interpolate;
+  const numOffsets = offsetDefinition.length;
+  for (let i = 0; i < numOffsets; i++) {
+    const offset = resolveOffset(offsetDefinition[i], containerSize[lengthLabel], targetSize[lengthLabel], inset[axis]);
+    if (!hasChanged && offset !== info[axis].interpolatorOffsets[i]) {
+      hasChanged = true;
+    }
+    info[axis].offset[i] = offset;
+  }
+  if (hasChanged) {
+    info[axis].interpolate = interpolate(info[axis].offset, defaultOffset$1(offsetDefinition), { clamp: false });
+    info[axis].interpolatorOffsets = [...info[axis].offset];
+  }
+  info[axis].progress = clamp(0, 1, info[axis].interpolate(info[axis].current));
+}
+function measure(container, target = container, info) {
+  info.x.targetOffset = 0;
+  info.y.targetOffset = 0;
+  if (target !== container) {
+    let node = target;
+    while (node && node !== container) {
+      info.x.targetOffset += node.offsetLeft;
+      info.y.targetOffset += node.offsetTop;
+      node = node.offsetParent;
+    }
+  }
+  info.x.targetLength = target === container ? target.scrollWidth : target.clientWidth;
+  info.y.targetLength = target === container ? target.scrollHeight : target.clientHeight;
+  info.x.containerLength = container.clientWidth;
+  info.y.containerLength = container.clientHeight;
+}
+function createOnScrollHandler(element, onScroll, info, options = {}) {
+  return {
+    measure: (time2) => {
+      measure(element, options.target, info);
+      updateScrollInfo(element, info, time2);
+      if (options.offset || options.target) {
+        resolveOffsets(element, info, options);
+      }
+    },
+    notify: () => onScroll(info)
+  };
+}
+const scrollListeners = /* @__PURE__ */ new WeakMap();
+const resizeListeners = /* @__PURE__ */ new WeakMap();
+const onScrollHandlers = /* @__PURE__ */ new WeakMap();
+const scrollSize = /* @__PURE__ */ new WeakMap();
+const dimensionCheckProcesses = /* @__PURE__ */ new WeakMap();
+const getEventTarget = (element) => element === document.scrollingElement ? window : element;
+function scrollInfo(onScroll, { container = document.scrollingElement, trackContentSize = false, ...options } = {}) {
+  if (!container)
+    return noop;
+  let containerHandlers = onScrollHandlers.get(container);
+  if (!containerHandlers) {
+    containerHandlers = /* @__PURE__ */ new Set();
+    onScrollHandlers.set(container, containerHandlers);
+  }
+  const info = createScrollInfo();
+  const containerHandler = createOnScrollHandler(container, onScroll, info, options);
+  containerHandlers.add(containerHandler);
+  if (!scrollListeners.has(container)) {
+    const measureAll = () => {
+      for (const handler of containerHandlers) {
+        handler.measure(frameData.timestamp);
+      }
+      frame.preUpdate(notifyAll2);
+    };
+    const notifyAll2 = () => {
+      for (const handler of containerHandlers) {
+        handler.notify();
+      }
+    };
+    const listener2 = () => frame.read(measureAll);
+    scrollListeners.set(container, listener2);
+    const target = getEventTarget(container);
+    window.addEventListener("resize", listener2);
+    if (container !== document.documentElement) {
+      resizeListeners.set(container, resize(container, listener2));
+    }
+    target.addEventListener("scroll", listener2);
+    listener2();
+  }
+  if (trackContentSize && !dimensionCheckProcesses.has(container)) {
+    const listener2 = scrollListeners.get(container);
+    const size = {
+      width: container.scrollWidth,
+      height: container.scrollHeight
+    };
+    scrollSize.set(container, size);
+    const checkScrollDimensions = () => {
+      const newWidth = container.scrollWidth;
+      const newHeight = container.scrollHeight;
+      if (size.width !== newWidth || size.height !== newHeight) {
+        listener2();
+        size.width = newWidth;
+        size.height = newHeight;
+      }
+    };
+    const dimensionCheckProcess = frame.read(checkScrollDimensions, true);
+    dimensionCheckProcesses.set(container, dimensionCheckProcess);
+  }
+  const listener = scrollListeners.get(container);
+  frame.read(listener, false, true);
+  return () => {
+    var _a3;
+    cancelFrame(listener);
+    const currentHandlers = onScrollHandlers.get(container);
+    if (!currentHandlers)
+      return;
+    currentHandlers.delete(containerHandler);
+    if (currentHandlers.size)
+      return;
+    const scrollListener = scrollListeners.get(container);
+    scrollListeners.delete(container);
+    if (scrollListener) {
+      getEventTarget(container).removeEventListener("scroll", scrollListener);
+      (_a3 = resizeListeners.get(container)) == null ? void 0 : _a3();
+      window.removeEventListener("resize", scrollListener);
+    }
+    const dimensionCheckProcess = dimensionCheckProcesses.get(container);
+    if (dimensionCheckProcess) {
+      cancelFrame(dimensionCheckProcess);
+      dimensionCheckProcesses.delete(container);
+    }
+    scrollSize.delete(container);
+  };
+}
+const presets = [
+  [ScrollOffset.Enter, "entry"],
+  [ScrollOffset.Exit, "exit"],
+  [ScrollOffset.Any, "cover"],
+  [ScrollOffset.All, "contain"]
+];
+const stringToProgress = {
+  start: 0,
+  end: 1
+};
+function parseStringOffset(s2) {
+  const parts = s2.trim().split(/\s+/);
+  if (parts.length !== 2)
+    return void 0;
+  const a2 = stringToProgress[parts[0]];
+  const b2 = stringToProgress[parts[1]];
+  if (a2 === void 0 || b2 === void 0)
+    return void 0;
+  return [a2, b2];
+}
+function normaliseOffset(offset) {
+  if (offset.length !== 2)
+    return void 0;
+  const result = [];
+  for (const item of offset) {
+    if (Array.isArray(item)) {
+      result.push(item);
+    } else if (typeof item === "string") {
+      const parsed = parseStringOffset(item);
+      if (!parsed)
+        return void 0;
+      result.push(parsed);
+    } else {
+      return void 0;
+    }
+  }
+  return result;
+}
+function matchesPreset(offset, preset) {
+  const normalised = normaliseOffset(offset);
+  if (!normalised)
+    return false;
+  for (let i = 0; i < 2; i++) {
+    const o2 = normalised[i];
+    const p2 = preset[i];
+    if (o2[0] !== p2[0] || o2[1] !== p2[1])
+      return false;
+  }
+  return true;
+}
+function offsetToViewTimelineRange(offset) {
+  if (!offset) {
+    return { rangeStart: "contain 0%", rangeEnd: "contain 100%" };
+  }
+  for (const [preset, name] of presets) {
+    if (matchesPreset(offset, preset)) {
+      return { rangeStart: `${name} 0%`, rangeEnd: `${name} 100%` };
+    }
+  }
+  return void 0;
+}
+const timelineCache = /* @__PURE__ */ new Map();
+function scrollTimelineFallback(options) {
+  const currentTime = { value: 0 };
+  const cancel = scrollInfo((info) => {
+    currentTime.value = info[options.axis].progress * 100;
+  }, options);
+  return { currentTime, cancel };
+}
+function getTimeline({ source, container, ...options }) {
+  const { axis } = options;
+  if (source)
+    container = source;
+  let containerCache = timelineCache.get(container);
+  if (!containerCache) {
+    containerCache = /* @__PURE__ */ new Map();
+    timelineCache.set(container, containerCache);
+  }
+  const targetKey = options.target ?? "self";
+  let targetCache = containerCache.get(targetKey);
+  if (!targetCache) {
+    targetCache = {};
+    containerCache.set(targetKey, targetCache);
+  }
+  const axisKey = axis + (options.offset ?? []).join(",");
+  if (!targetCache[axisKey]) {
+    if (options.target && canUseNativeTimeline(options.target)) {
+      const range = offsetToViewTimelineRange(options.offset);
+      if (range) {
+        targetCache[axisKey] = new ViewTimeline({
+          subject: options.target,
+          axis
+        });
+      } else {
+        targetCache[axisKey] = scrollTimelineFallback({
+          container,
+          ...options
+        });
+      }
+    } else if (canUseNativeTimeline()) {
+      targetCache[axisKey] = new ScrollTimeline({
+        source: container,
+        axis
+      });
+    } else {
+      targetCache[axisKey] = scrollTimelineFallback({
+        container,
+        ...options
+      });
+    }
+  }
+  return targetCache[axisKey];
+}
+function attachToAnimation(animation, options) {
+  const timeline = getTimeline(options);
+  const range = options.target ? offsetToViewTimelineRange(options.offset) : void 0;
+  const useNative = options.target ? canUseNativeTimeline(options.target) && !!range : canUseNativeTimeline();
+  return animation.attachTimeline({
+    timeline: useNative ? timeline : void 0,
+    ...range && useNative && {
+      rangeStart: range.rangeStart,
+      rangeEnd: range.rangeEnd
+    },
+    observe: (valueAnimation) => {
+      valueAnimation.pause();
+      return observeTimeline((progress2) => {
+        valueAnimation.time = valueAnimation.iterationDuration * progress2;
+      }, timeline);
+    }
+  });
+}
+function isOnScrollWithInfo(onScroll) {
+  return onScroll.length === 2;
+}
+function attachToFunction(onScroll, options) {
+  if (isOnScrollWithInfo(onScroll)) {
+    return scrollInfo((info) => {
+      onScroll(info[options.axis].progress, info);
+    }, options);
+  } else {
+    return observeTimeline(onScroll, getTimeline(options));
+  }
+}
+function scroll(onScroll, { axis = "y", container = document.scrollingElement, ...options } = {}) {
+  if (!container)
+    return noop;
+  const optionsWithDefaults = { axis, container, ...options };
+  return typeof onScroll === "function" ? attachToFunction(onScroll, optionsWithDefaults) : attachToAnimation(onScroll, optionsWithDefaults);
+}
+const createScrollMotionValues = () => ({
+  scrollX: motionValue(0),
+  scrollY: motionValue(0),
+  scrollXProgress: motionValue(0),
+  scrollYProgress: motionValue(0)
+});
+const isRefPending = (ref) => {
+  if (!ref)
+    return false;
+  return !ref.current;
+};
+function makeAccelerateConfig(axis, options, container, target) {
+  return {
+    factory: (animation) => scroll(animation, {
+      ...options,
+      axis,
+      container: (container == null ? void 0 : container.current) || void 0,
+      target: (target == null ? void 0 : target.current) || void 0
+    }),
+    times: [0, 1],
+    keyframes: [0, 1],
+    ease: (v2) => v2,
+    duration: 1
+  };
+}
+function canAccelerateScroll(target, offset) {
+  if (typeof window === "undefined")
+    return false;
+  return target ? supportsViewTimeline() && !!offsetToViewTimelineRange(offset) : supportsScrollTimeline();
+}
+function useScroll({ container, target, ...options } = {}) {
+  const values = useConstant(createScrollMotionValues);
+  if (canAccelerateScroll(target, options.offset)) {
+    values.scrollXProgress.accelerate = makeAccelerateConfig("x", options, container, target);
+    values.scrollYProgress.accelerate = makeAccelerateConfig("y", options, container, target);
+  }
+  const scrollAnimation = reactExports.useRef(null);
+  const needsStart = reactExports.useRef(false);
+  const start = reactExports.useCallback(() => {
+    scrollAnimation.current = scroll((_progress, { x: x2, y: y2 }) => {
+      values.scrollX.set(x2.current);
+      values.scrollXProgress.set(x2.progress);
+      values.scrollY.set(y2.current);
+      values.scrollYProgress.set(y2.progress);
+    }, {
+      ...options,
+      container: (container == null ? void 0 : container.current) || void 0,
+      target: (target == null ? void 0 : target.current) || void 0
+    });
+    return () => {
+      var _a3;
+      (_a3 = scrollAnimation.current) == null ? void 0 : _a3.call(scrollAnimation);
+    };
+  }, [container, target, JSON.stringify(options.offset)]);
+  useIsomorphicLayoutEffect(() => {
+    needsStart.current = false;
+    if (isRefPending(container) || isRefPending(target)) {
+      needsStart.current = true;
+      return;
+    } else {
+      return start();
+    }
+  }, [start]);
+  reactExports.useEffect(() => {
+    if (needsStart.current) {
+      invariant(!isRefPending(container));
+      invariant(!isRefPending(target));
+      return start();
+    } else {
+      return;
+    }
+  }, [start]);
+  return values;
+}
+function useMotionValue(initial) {
+  const value = useConstant(() => motionValue(initial));
+  const { isStatic } = reactExports.useContext(MotionConfigContext);
+  if (isStatic) {
+    const [, setLatest] = reactExports.useState(initial);
+    reactExports.useEffect(() => value.on("change", setLatest), []);
+  }
+  return value;
+}
+function useCombineMotionValues(values, combineValues) {
+  const value = useMotionValue(combineValues());
+  const updateValue = () => value.set(combineValues());
+  updateValue();
+  useIsomorphicLayoutEffect(() => {
+    const scheduleUpdate = () => frame.preRender(updateValue, false, true);
+    const subscriptions = values.map((v2) => v2.on("change", scheduleUpdate));
+    return () => {
+      subscriptions.forEach((unsubscribe) => unsubscribe());
+      cancelFrame(updateValue);
+    };
+  });
+  return value;
+}
+function useComputed(compute) {
+  collectMotionValues.current = [];
+  compute();
+  const value = useCombineMotionValues(collectMotionValues.current, compute);
+  collectMotionValues.current = void 0;
+  return value;
+}
+function useTransform(input, inputRangeOrTransformer, outputRangeOrMap, options) {
+  if (typeof input === "function") {
+    return useComputed(input);
+  }
+  const isOutputMap = outputRangeOrMap !== void 0 && !Array.isArray(outputRangeOrMap) && typeof inputRangeOrTransformer !== "function";
+  if (isOutputMap) {
+    return useMapTransform(input, inputRangeOrTransformer, outputRangeOrMap, options);
+  }
+  const outputRange = outputRangeOrMap;
+  const transformer = typeof inputRangeOrTransformer === "function" ? inputRangeOrTransformer : transform(inputRangeOrTransformer, outputRange, options);
+  const result = Array.isArray(input) ? useListTransform(input, transformer) : useListTransform([input], ([latest]) => transformer(latest));
+  const inputAccelerate = !Array.isArray(input) ? input.accelerate : void 0;
+  if (inputAccelerate && !inputAccelerate.isTransformed && typeof inputRangeOrTransformer !== "function" && Array.isArray(outputRangeOrMap) && (options == null ? void 0 : options.clamp) !== false) {
+    result.accelerate = {
+      ...inputAccelerate,
+      times: inputRangeOrTransformer,
+      keyframes: outputRangeOrMap,
+      isTransformed: true,
+      ...{}
+    };
+  }
+  return result;
+}
+function useListTransform(values, transformer) {
+  const latest = useConstant(() => []);
+  return useCombineMotionValues(values, () => {
+    latest.length = 0;
+    const numValues = values.length;
+    for (let i = 0; i < numValues; i++) {
+      latest[i] = values[i].get();
+    }
+    return transformer(latest);
+  });
+}
+function useMapTransform(inputValue, inputRange, outputMap, options) {
+  const keys2 = useConstant(() => Object.keys(outputMap));
+  const output = useConstant(() => ({}));
+  for (const key of keys2) {
+    output[key] = useTransform(inputValue, inputRange, outputMap[key], options);
+  }
+  return output;
+}
+function useFollowValue(source, options = {}) {
+  const { isStatic } = reactExports.useContext(MotionConfigContext);
+  const getFromSource = () => isMotionValue(source) ? source.get() : source;
+  if (isStatic) {
+    return useTransform(getFromSource);
+  }
+  const value = useMotionValue(getFromSource());
+  reactExports.useInsertionEffect(() => {
+    return attachFollow(value, source, options);
+  }, [value, JSON.stringify(options)]);
+  return value;
+}
+function useSpring(source, options = {}) {
+  return useFollowValue(source, { type: "spring", ...options });
+}
 const ARTICLES = [
   {
-    id: "locomotive-x-lightship",
-    title: "Locomotive x Lightship",
-    excerpt: "We partnered with Lightship to rethink their digital presence from the ground up — a story of craft, collaboration, and pushing the boundaries of what a brand website can be.",
-    date: "March 2024",
-    author: "Marie Tremblay",
-    content: `When Lightship reached out, they had a clear ambition: build a digital experience that matched the ambition of their physical vessels. The brief was open-ended — and that's exactly how we like it.
+    id: "lto-history-origins",
+    title: "LTO Tape: From IBM Labs to Global Standard",
+    excerpt: "How Linear Tape-Open went from a 1990s IBM research project to the world's most trusted long-term archival format, trusted by broadcasters and studios worldwide.",
+    date: "April 20, 2026",
+    author: "Priya Sharma",
+    category: "LTO History",
+    content: `Linear Tape-Open — LTO — didn't emerge overnight. The technology traces its roots to research conducted independently at IBM, Hewlett-Packard, and Seagate through the late 1990s. In 1997, the three companies formalised the LTO Consortium and began collaborating on an open standard to break the monopoly of proprietary tape formats that had long frustrated broadcasters and enterprises alike.
 
-We spent the first two weeks in deep immersion. Sailing vocabulary, naval engineering aesthetics, the romance of open water. We wanted every scroll interaction, every typographic choice, to carry the weight of that world.
+**The First Generation (2000)**
 
-The result is a site built around motion — not gratuitous animation for its own sake, but movement that mirrors the rolling of a vessel at sea. Horizontal scrolling sections give way to vertical revelation. Typography scales between intimacy and grandeur.
+LTO-1 launched commercially in 2000 with a native capacity of 100 GB per cartridge — extraordinary at the time. The LTFS (Linear Tape File System) concept was still a decade away, but LTO-1 proved that open, inter-operable tape could work. Seagate later exited the Consortium, leaving IBM and HPE as the two primary drive manufacturers, later joined by Quantum as a third licensee.
 
-Working with Lightship's team was a genuine collaboration. Their creative director understood intuitively what we were reaching for, and that trust allowed us to go further than we might have otherwise.
+**Why Open Mattered**
 
-The project took six months from kickoff to launch. Three rounds of motion prototyping. Two typographic resets. One late-night discovery that changed the entire navigation concept.
+Before LTO, broadcasters were locked into proprietary formats — DLT, AIT, and others — each requiring specific hardware. If a vendor discontinued a product, archives became inaccessible. LTO's open specification guarantees that any LTO-compliant drive can read tapes written by any other manufacturer. This backward-compatibility commitment has proven invaluable for long-term media archives spanning decades.
 
-We're proud of what we built together. But more than the finished product, we're proud of how we got there.`
+**The Roadmap Model**
+
+The LTO Consortium adopted a published roadmap model: every generation doubles capacity and increases transfer speeds by roughly 50%. This predictability allowed studios, broadcasters, and data centres to plan archival infrastructure with confidence. The roadmap has held remarkably true across nine generations. LTO-9 (2021) delivers 18 TB native capacity per cartridge — 180 times more than LTO-1. LTO-10 is expected to push beyond 36 TB native.
+
+At WeVirtual, our Symply PRO and MagStar tape writers operate across LTO-7, LTO-8, and LTO-9 formats, ensuring that every asset we archive is catalogued with the generation, hardware, and tape position — a full chain of custody that will remain readable for decades.`
   },
   {
-    id: "should-i-use-locomotive-scroll",
-    title: "Should I use Locomotive Scroll on my project?",
-    excerpt: "Locomotive Scroll is our open-source library for smooth, parallax-driven page scrolling. But it's not right for every project. Here's how to think about the decision.",
-    date: "January 2024",
-    author: "Pierre Laval",
-    content: `Locomotive Scroll has been downloaded millions of times. We're proud of it. But we also see it misused — slapped onto projects where it creates friction rather than delight.
+    id: "hdd-trends-2026",
+    title: "HDD in 2026: HAMR, MAMR, and the 100 TB Drive",
+    excerpt: "Hard disk drives aren't dying — they're evolving. Energy-Assisted Magnetic Recording is pushing platter densities into previously impossible territory, and the 100 TB desktop drive may arrive sooner than you think.",
+    date: "April 20, 2026",
+    author: "Rohan Mehta",
+    category: "HDD News",
+    content: `The narrative that SSDs will kill hard drives has circulated for over a decade. In 2026, HDDs are not only still alive — they are pushing into capacities that flash storage cannot approach economically. The reason: HAMR and MAMR, two energy-assisted recording technologies that are finally reaching commercial maturity.
 
-So let's talk honestly about when to use it and when to reach for something else.
+**Heat-Assisted Magnetic Recording (HAMR)**
 
-**The case for Locomotive Scroll**
+HAMR uses a tiny laser integrated into the read/write head to momentarily heat the recording medium to just below its Curie point — the temperature at which magnetic domains can be reliably written at nanoscale precision. Seagate has shipped HAMR drives commercially since 2023, with 30 TB+ units now available to hyperscalers. Consumer and SMB variants are expected to reach the market through 2026.
 
-When you have rich visual content — photography, video, illustration — that deserves to breathe as it enters the viewport, Locomotive Scroll excels. The parallax capabilities let you create depth and layering that feels genuinely cinematic.
+**Microwave-Assisted Magnetic Recording (MAMR)**
 
-For brand and portfolio sites, the library's ability to transform scroll into a narrative device is unmatched in the open-source ecosystem.
+Western Digital's competing approach uses a microwave-emitting spin-torque oscillator rather than a laser. MAMR trades some areal density gain for lower manufacturing complexity. WD's MAMR-based Ultrastar drives have scaled to 28 TB and are proving reliable in high-duty-cycle data centre environments.
 
-**The case against**
+**What This Means for Media Archives**
 
-Content-heavy sites with lots of text? Proceed carefully. Smooth scrolling can create disorientation for users who need to scan and navigate quickly. Accessibility is also a real concern — users with vestibular disorders can find the motion overwhelming.
+For media and entertainment workflows — where single projects can run to dozens of terabytes — the economics of HDD remain compelling for nearline storage. A 30 TB HAMR drive at current pricing offers roughly half the cost-per-gigabyte of equivalent NVMe flash. Combined with LTO tape for cold-tier archival, a HDD + LTO hybrid architecture remains the most cost-effective approach for studios managing large-format video assets.
 
-E-commerce and transactional interfaces should rarely use it. The friction adds cognitive load at exactly the wrong moment.
-
-**Our rule of thumb**
-
-If the primary goal of the experience is emotional impact, use it. If the primary goal is information retrieval or task completion, don't.
-
-And always, always respect prefers-reduced-motion.`
+WeVirtual uses HDD-based nearline storage as a staging layer between production ingest and final LTO write, ensuring fast access during active projects while committing long-term assets to tape.`
   },
   {
-    id: "why-no-frontend-frameworks",
-    title: "Why don't we use front-end frameworks at Locomotive?",
-    excerpt: "React, Vue, Svelte — these are powerful tools. So why does Locomotive still build most client projects without them? The answer is about craft, performance, and the nature of the work we do.",
-    date: "November 2023",
-    author: "Alex Bouchard",
-    content: `This question comes up in interviews, in client conversations, in comment threads. The answer is more nuanced than a hot take, so let us try to explain.
+    id: "lto-generations-lto1-lto9",
+    title: "Every LTO Generation Explained: LTO-1 Through LTO-9",
+    excerpt: "A complete technical reference tracing the capacity, speed, and key innovations of each LTO generation — from the modest 100 GB of LTO-1 to the 18 TB powerhouse of LTO-9.",
+    date: "April 19, 2026",
+    author: "Ananya Patel",
+    category: "LTO Technology",
+    content: `Understanding LTO generations is essential for anyone managing long-term media archives. Each generation doubles native capacity and introduces new features that improve reliability, security, and interoperability. Here's the complete picture.
 
-**What we actually build**
+**LTO-1 (2000) — 100 GB / 20 MB/s**
+The foundation. LTO-1 established the open standard and proved inter-operability across IBM, HPE, and Quantum drives. Modest by today's standards, but a major step beyond contemporary proprietary formats.
 
-Most of what Locomotive creates is marketing and brand experiences — sites where the goal is emotion, perception, and identity. These sites typically don't have complex application state. There's no user authentication, no real-time data, no UI that needs to respond to dozens of user interactions.
+**LTO-2 (2003) — 200 GB / 40 MB/s**
+Doubled capacity on the same cartridge form factor — a pattern that would hold for every subsequent generation. Introduced hardware data compression at 2:1 nominal ratio.
 
-For this work, adding React means adding significant JavaScript overhead in exchange for benefits that simply don't apply.
+**LTO-3 (2005) — 400 GB / 80 MB/s**
+First generation to support WORM (Write Once, Read Many) media — critical for regulatory compliance and archival integrity. Transfer speeds made LTO-3 viable for broadcast backup workflows.
 
-**What we gain without a framework**
+**LTO-4 (2007) — 800 GB / 120 MB/s**
+Introduced optional AES-256 hardware encryption. A milestone for media companies handling commercially sensitive content. WORM capability became standard.
 
-Performance, mostly. A site built with vanilla JavaScript and modern CSS can be dramatically lighter than its React equivalent. For creative experiences where the browser is doing expensive rendering work for animation and WebGL, every kilobyte matters.
+**LTO-5 (2010) — 1.5 TB / 140 MB/s**
+The launch of LTFS (Linear Tape File System) — the most important LTO advancement since LTO-1. LTFS allows tape to be mounted like a disk, making file-level access straightforward without proprietary software.
 
-We also gain creative freedom. Framework conventions can constrain the strange, unexpected solutions that make truly original work. When you're not fighting against React's rendering model or Vue's reactivity system, you can reach for more direct solutions.
+**LTO-6 (2012) — 2.5 TB / 160 MB/s**
+Brought partitioning improvements to LTFS and increased transfer speeds significantly. LTO-6 became the workhorse generation for many post-production houses.
 
-**When we do use frameworks**
+**LTO-7 (2015) — 6 TB / 300 MB/s**
+A capacity leap that changed the economics of tape for large-format video. LTO-7 M8 media (using LTO-8 cartridges at LTO-7 firmware) extended usable life of the format.
 
-For projects with genuine application complexity — admin panels, content management tools, anything with real state — we absolutely reach for React or Vue. The right tool for the right job.
+**LTO-8 (2017) — 12 TB / 360 MB/s**
+Introduced BAO (Bulk Erase with Append Only) security mode. The 12 TB native capacity made LTO-8 the default choice for 4K and RAW media archival.
 
-The industry's reflex to reach for a framework before evaluating whether it's needed is what we're pushing back on. Not frameworks themselves.`
+**LTO-9 (2021) — 18 TB / 400 MB/s**
+Current flagship. LTO-9 delivers 18 TB native capacity with improved error correction and a new self-describing cartridge memory format. WeVirtual's MagStar hardware writes to LTO-9 at full rated speeds for our most demanding client ingest workflows.`
   },
   {
-    id: "revolution-of-workspace",
-    title: "The revolution of the workspace",
-    excerpt: "After years of remote work, distributed teams, and hybrid experiments, we redesigned our Montreal studio from scratch. Here's what we learned about how space shapes culture.",
-    date: "September 2023",
-    author: "Sophie Martin",
-    content: `The pandemic didn't just change where we work. It changed what we believe work is for.
+    id: "ssd-nvme-2026-trends",
+    title: "NVMe SSDs in 2026: PCIe 5.0, QLC, and What's Next",
+    excerpt: "Solid-state storage is entering a new era. PCIe 5.0 drives are breaking the 14 GB/s barrier, QLC NAND is making 8 TB desktop SSDs affordable, and PLC research points to even denser futures.",
+    date: "April 19, 2026",
+    author: "Priya Sharma",
+    category: "SSD News",
+    content: `The SSD market in 2026 looks radically different from 2020. PCIe 5.0 has become the mainstream interface for prosumer and workstation drives, QLC (Quad-Level Cell) NAND has matured enough to be viable for read-heavy workloads, and enterprise drives are approaching 60+ TB per 2.5" form factor.
 
-When we returned to the office — or rather, when we made the choice to return — we knew the old model wasn't right anymore. The pre-2020 open plan, the hot desks, the glass-walled meeting rooms — none of it reflected how we actually work best.
+**PCIe 5.0 Goes Mainstream**
 
-So we took a year to figure out what we actually needed.
+PCIe 5.0 NVMe drives — first appearing in late 2023 with sequential read speeds around 10 GB/s — have evolved significantly. By early 2026, drives from Samsung, WD, and Seagate are achieving sequential reads of 12–14 GB/s. Intel's 14th-gen and AMD's Ryzen 9000 platforms both support PCIe 5.0 x4 natively, meaning these speeds are accessible on mainstream workstations.
 
-**What we discovered**
+For media editing workflows — particularly 8K RAW and multi-stream ProRes — the practical implication is that NVMe scratch storage is no longer the bottleneck. The limiting factor has shifted to codec decode performance and GPU bandwidth.
 
-Deep work needs protection. The kind of thinking required for genuinely original creative work — the kind that takes hours to get into and minutes to lose — can't happen in an environment optimized for visibility and spontaneous collaboration.
+**QLC Comes of Age**
 
-Collaboration needs ritual. The best conversations we have aren't accidental. They're structured: a shared problem, a clear starting point, time pressure, and a facilitator.
+QLC NAND stores four bits per cell, enabling higher density at lower cost but with reduced write endurance compared to TLC. Early QLC drives (2019–2021) suffered from dramatic write speed cliff effects under sustained workloads. 2025–2026 QLC drives have largely resolved this through larger dynamic write caches and improved controller firmware. An 8 TB QLC desktop SSD now costs roughly what a 2 TB TLC drive cost in 2021.
 
-The space should be the last argument for coming in. If people are choosing to be in the office, the office should earn that choice.
+**The PLC Horizon**
 
-**What we built**
+Penta-Level Cell (PLC) NAND — five bits per cell — is advancing through prototypes. Expected commercial availability is 2027–2028. PLC will enable even denser storage at lower cost, but with write endurance suited primarily to read-dominant archival applications rather than active editing.
 
-Four zones: deep work (quiet, individual, with acoustic treatment), collaboration (large tables, whiteboards, no assigned seats), social (kitchen, lounge, deliberately informal), and creative (materials library, model-building area, where ideas can be made physical).
+**Cold Tier vs. Hot Tier**
 
-Six months in, we're more present when we're present, and more genuinely remote when we're remote. The space works because we designed it around behavior, not aesthetics.
+Despite SSD advances, LTO tape remains the superior choice for cold-tier archival. The cost-per-gigabyte gap is approximately 10:1 in tape's favour at scale, and tape has a 30+ year archival life at proper storage temperatures. SSDs shine for hot-tier (active project) and warm-tier (recent delivery) storage — the layered archive architecture that WeVirtual advocates for all media clients.`
+  },
+  {
+    id: "lto-vs-hdd-vs-ssd-archiving",
+    title: "LTO vs HDD vs SSD: The Definitive Archiving Comparison",
+    excerpt: "Which storage technology belongs in your archive? We break down cost-per-GB, longevity, access speed, and risk profile for LTO tape, hard drives, and solid-state storage.",
+    date: "April 18, 2026",
+    author: "Rohan Mehta",
+    category: "Storage Trends",
+    content: `Media professionals are routinely confronted with this choice: when a project wraps, where does it go? The answer depends on your budget, access patterns, risk tolerance, and time horizon. Let's compare the three main technologies honestly.
 
-Though it looks pretty good too.`
+**Cost Per Gigabyte (2026 estimates)**
+
+LTO-9 tape: approximately $0.006/GB (cartridge only) or $0.015/GB (including amortised hardware)
+HDD (nearline, 30 TB HAMR): approximately $0.012/GB
+SSD (QLC NVMe, 8 TB): approximately $0.08/GB
+
+For pure cold storage at scale, tape wins decisively. A petabyte of tape storage costs roughly 13× less than equivalent SSD capacity.
+
+**Longevity**
+
+LTO tape stored at 18°C and 40% relative humidity: 30+ years guaranteed by FUJIFILM and Sony, the two primary LTO media manufacturers. The LTO Consortium requires two-generation backward read compatibility, meaning tapes remain accessible as technology evolves.
+
+HDDs: 3–5 years in active use, potentially 10+ years in offline storage if spun up and verified periodically. Bearings and magnetic platters degrade over time.
+
+SSDs: Consumer drives lose charge in unpowered storage over 1–2 years, especially at elevated temperatures. Enterprise-grade SSDs handle cold storage better but are still not recommended for multi-year offline archival.
+
+**Access Speed**
+
+SSD: effectively instant random access, GB/s sequential.
+HDD: millisecond seek times, hundreds of MB/s sequential.
+LTO tape: 30–60 second load time, then 400 MB/s sequential. Unsuitable for random access but excellent for full-file streaming once loaded.
+
+**Our Recommendation**
+
+For WeVirtual clients: active projects on SSD/HDD RAID, recent deliveries on HDD nearline, long-term archive on LTO tape. This three-tier approach optimises both cost and access speed at every stage of the asset lifecycle.`
+  },
+  {
+    id: "lto-10-specs-preview",
+    title: "LTO-10 Preview: 36 TB and What We Know So Far",
+    excerpt: "The LTO Consortium has published preliminary specifications for LTO-10. We analyse what 36 TB native capacity, enhanced WORM, and improved encryption mean for media archives.",
+    date: "April 18, 2026",
+    author: "Ananya Patel",
+    category: "LTO Technology",
+    content: `The LTO Consortium's published roadmap has long indicated LTO-10 at approximately 36 TB native capacity — double the 18 TB of LTO-9. As LTO-10 drive shipments approach, more specification details are emerging. Here's what the industry knows and expects.
+
+**Capacity and Transfer Speed**
+
+The preliminary LTO-10 specification targets 36 TB native capacity with a native transfer rate of approximately 900 MB/s (compressed: 2,250 MB/s at 2.5:1 compression). This is a significant leap from LTO-9's 400 MB/s native. For single-file archives in the hundreds of gigabytes — typical of 4K and 8K RAW workflows — LTO-10 will meaningfully reduce write times.
+
+**Backward Compatibility**
+
+Per LTO Consortium standards, LTO-10 drives will read LTO-9 and LTO-8 media. Write compatibility extends to LTO-9 only. This is the standard two-read/one-write backward compatibility that has characterised every LTO generation since LTO-4.
+
+**New Cryptographic Features**
+
+LTO-10 is expected to introduce SHA-3 based integrity verification in addition to the existing AES-256 encryption. This provides a modern cryptographic baseline for regulatory compliance in jurisdictions with stricter data governance requirements — particularly relevant for European media clients under evolving GDPR interpretations.
+
+**LTFS Improvements**
+
+The LTFS standard accompanying LTO-10 includes improved partition management, allowing larger index partitions that reduce mount times for cartridges with dense file hierarchies. For archives with thousands of individual assets on a single cartridge — common in media environments — this is a practical improvement.
+
+**When to Migrate**
+
+WeVirtual recommends clients currently on LTO-7 or earlier prioritise migration to LTO-9 now rather than waiting for LTO-10 hardware. LTO-10 drives will not read LTO-7, and the cost of delaying migration increases as older drives become unavailable. LTO-8 and LTO-9 clients can wait for LTO-10 pricing to stabilise in 2027.`
+  },
+  {
+    id: "tape-storage-media-archives",
+    title: "Why Broadcast and Post-Production Chooses Tape",
+    excerpt: "Despite the rise of cloud storage and cheaper SSDs, the world's largest media libraries still migrate to LTO tape. Here's the technical and economic case that keeps tape relevant in professional media.",
+    date: "April 17, 2026",
+    author: "Priya Sharma",
+    category: "LTO History",
+    content: `Walk into any major post-production facility — from Mumbai to Los Angeles to Tokyo — and you will find LTO tape drives. The BBC, Disney, Netflix, and virtually every major broadcaster maintains tape archives. This is not inertia: it is a calculated infrastructure decision made and re-made annually.
+
+**The Cold Storage Economics**
+
+At scale, tape simply cannot be matched on cost per gigabyte for cold and cold-warm storage. Netflix reportedly stores petabytes of original content on LTO. At LTO-9 pricing, a 1 PB archive occupies roughly 56 cartridges and costs under $2,500 in media alone. An equivalent AWS S3 Glacier Deep Archive bill at $0.00099/GB/month runs to approximately $1,000/month — every month, indefinitely.
+
+**Air-Gap Security**
+
+Ransomware has become a defining threat for media companies. An offline LTO tape cannot be encrypted by ransomware. Cloud storage, NAS, and even offline HDDs connected to networks have been compromised by sophisticated attacks. The physical air gap of tape provides a category of security that no networked storage technology can replicate.
+
+**The 3-2-1-1-0 Rule**
+
+Modern data protection best practices have evolved from the 3-2-1 rule (three copies, two media types, one offsite) to 3-2-1-1-0: the additional "1" specifying one air-gapped offline copy, and "0" meaning zero errors after verified restore testing. LTO tape with LTFS and regular verify cycles satisfies this rule naturally.
+
+**Symply PRO and MagStar at WeVirtual**
+
+Our Symply PRO units are designed for edit suite and on-set workflows — compact, fast, and compatible with full LTO-9 native speeds. Our MagStar library-class hardware handles high-volume ingest for clients with large ongoing production demands. Together, they allow us to serve both boutique post houses and broadcast-scale clients from the same infrastructure.`
+  },
+  {
+    id: "ssd-for-production-workflows",
+    title: "Building an SSD-First Production Workflow in 2026",
+    excerpt: "PCIe 5.0, Thunderbolt 5, and maturing RAID options have made all-SSD editing rigs practical for even 8K workflows. Here's how to architect a fast, resilient production storage system.",
+    date: "April 17, 2026",
+    author: "Rohan Mehta",
+    category: "SSD News",
+    content: `The edit suite of 2026 is fundamentally different from 2018. NVMe has replaced SATA SSD as the professional standard. Thunderbolt 5 brings 120 Gbps external bandwidth, enough to saturate multi-drive RAID arrays. And the rise of PCIe 5.0 has finally made the local workstation the fastest link in the chain.
+
+**Internal Storage: PCIe 5.0 RAID**
+
+For primary edit drives, a pair of PCIe 5.0 NVMe SSDs in software RAID-0 delivers upwards of 24 GB/s sequential — more than enough for 8K RED RAW at 24fps (approximately 500 MB/s) or multi-cam 4K ProRes 4444. The risk of RAID-0 (no redundancy) is mitigated by the short lifecycle of project storage: assets should move to protected nearline within days of shooting.
+
+**External Storage: Thunderbolt 5 RAID Arrays**
+
+Thunderbolt 5 (USB4 Gen 4) devices from OWC, G-Technology, and Promise now offer 4-8 bay SSD RAID enclosures with sustained read rates exceeding 20 GB/s. These serve as ideal near-primary storage for slightly older active projects — faster than HDDs but cheaper per gigabyte than internal PCIe 5.0 SSDs.
+
+**Nearline and Archive Tier**
+
+Beyond the edit suite, the economics shift. 8 TB QLC NVMe is about $640 at 2026 pricing — reasonable for warm-tier nearline (projects delivered in the last 6–12 months). For anything older, HDDs and ultimately LTO tape provide dramatically better cost efficiency. WeVirtual's recommended architecture: SSD for active (0–3 months), HDD RAID for nearline (3–24 months), LTO tape for archive (24 months+).
+
+**Data Protection**
+
+Every SSD RAID configuration should be paired with a verified backup. RAID is not a backup. A 3-2-1 architecture — primary SSD RAID, secondary HDD backup, tertiary LTO tape offsite — ensures production data survives hardware failure, accidental deletion, and environmental events.`
+  },
+  {
+    id: "hdd-smr-cmr-explained",
+    title: "SMR vs CMR Hard Drives: What Media Professionals Must Know",
+    excerpt: "Shingled Magnetic Recording offers higher capacity at lower cost, but its write performance characteristics can be catastrophic for certain workloads. Understanding the difference is essential before buying drives for your archive.",
+    date: "April 16, 2026",
+    author: "Ananya Patel",
+    category: "HDD News",
+    content: `When Seagate and Western Digital began shipping SMR (Shingled Magnetic Recording) drives without clearly labelling them in 2020, the storage community erupted. Four years later, the CMR/SMR distinction remains one of the most practically important things a storage professional can understand.
+
+**Conventional Magnetic Recording (CMR)**
+
+In CMR drives, magnetic tracks are written side by side without overlap. Each track can be rewritten independently. This makes CMR drives ideal for write-heavy workloads: RAID rebuilds, video ingest, database writes, and NAS environments. CMR drives include the WD Red Plus, WD Gold, Seagate IronWolf (non-ST suffix models), and enterprise-class drives.
+
+**Shingled Magnetic Recording (SMR)**
+
+SMR writes tracks that overlap like roof shingles — each new track partially overwrites the edge of the previous one. This increases areal density (more data per platter) but means that overwriting data is complex: the entire "band" of shingled tracks must be read, modified in a buffer, and rewritten. For sequential write workloads, SMR performs comparably to CMR. For random writes or mixed workloads, performance degrades significantly.
+
+**The Problem for Media Archives**
+
+Media archives typically involve large sequential writes during ingest — a workload where SMR performs adequately. The issue arises during RAID rebuild operations. A RAID-5 or RAID-6 rebuild on SMR drives can take 2–3× longer than on CMR drives, dramatically extending the window of vulnerability when a drive fails.
+
+**Our Recommendation**
+
+For NAS, RAID, and archive servers: always CMR. Verify before purchase — look for WD Red Plus (not standard WD Red), Seagate IronWolf (not IronWolf SMR), and any drive listed as "CMR" in the manufacturer's specifications. WeVirtual's nearline HDD infrastructure uses exclusively CMR drives to ensure reliable RAID rebuild and consistent ingest performance.`
+  },
+  {
+    id: "ltfs-deep-dive",
+    title: "LTFS: The Technology That Made Tape Practical for Creatives",
+    excerpt: "Linear Tape File System transformed LTO from an enterprise backup tool into a practical medium for creative professionals. Here's how LTFS works and why it changed everything.",
+    date: "April 16, 2026",
+    author: "Priya Sharma",
+    category: "LTO Technology",
+    content: `Before LTFS, working with LTO tape required specialist backup software — products like Spectra Logic, Quantum StorNext, or expensive custom systems. Tape was an enterprise technology, intimidating and inaccessible to boutique post-production houses. LTFS changed that fundamentally.
+
+**What LTFS Does**
+
+LTFS (Linear Tape File System), introduced with LTO-5 in 2010, defines a standard filesystem on tape that any LTFS-compatible software can read and write — including free implementations. When a tape is mounted via LTFS, it appears to the operating system as a conventional drive. Files can be dragged and dropped. Directory listings work normally. No proprietary catalog software is required.
+
+**The Dual-Partition Architecture**
+
+LTFS uses a two-partition structure on each tape cartridge. Partition 0 (the Index Partition) stores the file index — essentially a directory of everything on the tape, including file names, sizes, timestamps, and tape positions. Partition 1 (the Data Partition) stores the actual file data. When a tape is mounted, the index is read first, giving the filesystem a complete directory instantly. When files are written, they are appended to the data partition and the index is updated.
+
+**LTFS and Adobe Premiere / DaVinci Resolve**
+
+Both Premiere Pro and DaVinci Resolve support LTFS-mounted tape as a valid source drive for media linking. This means archived projects can be relinked directly from tape without copying to disk first — extremely useful for archive review workflows where only a portion of the project media is needed.
+
+**Sync and Index Best Practices**
+
+One critical LTFS best practice: always eject the tape cleanly through the filesystem unmount process rather than physically removing it mid-write. An unclean eject can corrupt the index partition, making tape contents apparently inaccessible — though data recovery is usually possible with LTFS repair tools. WeVirtual performs a full index verification pass after every ingest write to ensure archive integrity.`
+  },
+  {
+    id: "cold-storage-trends-2026",
+    title: "Cold Storage Trends in 2026: Tape, DNA, and Optical Disc",
+    excerpt: "LTO tape dominates cold storage today, but DNA data storage and M-DISC optical are emerging as ultra-long-term alternatives. We examine the state of the art in archival storage technology.",
+    date: "April 15, 2026",
+    author: "Rohan Mehta",
+    category: "Storage Trends",
+    content: `Cold storage — data that is rarely accessed but must be preserved indefinitely — is one of the most challenging problems in computing. The ideal cold storage medium would offer near-zero power consumption, indefinite data retention, extreme density, and low cost. No current technology ticks all four boxes simultaneously. Here's where each leading approach stands in 2026.
+
+**LTO Tape — The Current Champion**
+
+LTO tape remains the dominant cold storage technology. It requires no power (unlike HDDs, which must be powered on periodically to maintain bearings and magnetic domains). Properly stored LTO cartridges have demonstrated data retention beyond 30 years. The LTO Consortium's published roadmap through LTO-14 (projected at approximately 576 TB native) provides a credible long-term upgrade path. The primary limitations: sequential-only access and the need for compatible hardware as generations advance.
+
+**M-DISC Optical**
+
+M-DISC (Millenniata Disc) uses a stone-like inorganic recording layer rather than organic dye. Rigorous accelerated aging tests by the US Naval Air Warfare Center demonstrated M-DISC data retention beyond 1,000 years under archival conditions. Current M-DISC capacity is modest (25 GB BD-R equivalent), limiting practical use to metadata, certificates, and critical reference files rather than full media archives. Future M-DISC generations may address capacity constraints.
+
+**DNA Data Storage**
+
+Synthetic DNA storage encodes binary data as sequences of nucleotides. Microsoft and the University of Washington have demonstrated reading and writing data to DNA, with density theoretically in the exabytes-per-gram range. However, write costs remain at approximately $1,000 per megabyte for synthetic DNA synthesis, and read processes require full sequencing pipelines. Commercial viability for general media archives is at minimum 10–15 years away.
+
+**Our Conclusion**
+
+For media professionals in 2026, LTO tape remains the clear choice for cold archive. M-DISC is a worthy complement for critical metadata and irreplaceable reference files. DNA storage is a technology to watch but not yet invest in. WeVirtual's archive strategy is built on LTO-9 today, with a planned migration path to LTO-10 as hardware becomes available.`
+  },
+  {
+    id: "lto-media-manufacturers",
+    title: "FUJIFILM vs Sony LTO Media: Which Tape Should You Buy?",
+    excerpt: "FUJIFILM and Sony are the two primary LTO cartridge manufacturers. Both produce quality media, but there are meaningful differences in formulation, warranty terms, and pricing. Here's how to choose.",
+    date: "April 15, 2026",
+    author: "Ananya Patel",
+    category: "LTO History",
+    content: `When purchasing LTO cartridges, most buyers discover quickly that there are really only two primary manufacturers: FUJIFILM and Sony. Several brands — including HPE, IBM, Quantum, and Overland — badge and resell media made by one of these two. Understanding the differences helps in making an informed purchasing decision.
+
+**FUJIFILM LTO Media**
+
+FUJIFILM has been producing magnetic tape media since the 1950s. Their LTO cartridges use a proprietary Barium Ferrite (BaFe) particle formulation from LTO-5 onwards — a technology they developed to replace the metal particle (MP) approach used in earlier generations. BaFe offers excellent thermal stability, lower noise characteristics, and strong archival performance.
+
+FUJIFILM LTO-9 Ultrium cartridges carry a 30-year archival data retention guarantee. The company has maintained consistent quality and compatibility across all generation transitions. Price point sits slightly above Sony in most markets.
+
+**Sony LTO Media**
+
+Sony's LTO media uses Strontium Ferrite (SrFe) particle formulation, introduced with LTO-7M and expanded through LTO-8 and LTO-9. Sony claims SrFe offers marginally better areal density potential and lower error rates than BaFe under high-temperature storage conditions.
+
+Sony cartridges are typically priced slightly below FUJIFILM equivalents and are widely available through enterprise distribution channels. Sony's LTO tape manufacturing has an equally strong track record, and Sony has been an active contributor to the LTO Consortium's ongoing roadmap development.
+
+**Our Recommendation**
+
+Both manufacturers produce reliable, archive-quality media. For most clients, the practical choice comes down to pricing and availability from your preferred supplier. WeVirtual stocks both FUJIFILM and Sony LTO-9 media and selects based on current pricing, ensuring clients receive the best value without sacrificing archival quality. Always purchase media from authorised distributors — counterfeit LTO cartridges are a real market problem that can result in write failures and data loss.`
+  },
+  {
+    id: "hdd-nearline-architecture",
+    title: "Designing a Nearline HDD Archive for a Post-Production Studio",
+    excerpt: "Nearline storage bridges the gap between fast project drives and cold tape archives. Designing it well requires balancing capacity, performance, redundancy, and cost — here's a practical guide.",
+    date: "April 14, 2026",
+    author: "Priya Sharma",
+    category: "HDD News",
+    content: `Nearline storage occupies the most complex position in the media archive stack. It must be fast enough to serve recent project media without copying to edit drives. It must be reliable enough to serve as a primary safety net before tape writes complete. And it must scale affordably as project volume grows.
+
+**Choosing the Right Platform**
+
+Network-attached storage (NAS) is the near-universal choice for post-production nearline. Synology, QNAP, and open platforms running TrueNAS are the primary options for studios under 500 TB. Enterprise NAS from NetApp, Isilon/Dell, and IBM Spectrum Scale handles petabyte-scale deployments.
+
+For capacity-focused builds (archives, cold-warm tiers), RAID-6 or triple-parity RAID-Z3 (TrueNAS) provides sufficient redundancy — the ability to lose two drives simultaneously without data loss — while maintaining competitive storage efficiency.
+
+**Drive Selection for Nearline**
+
+Nearline NAS drives — WD Red Pro, WD Gold, Seagate IronWolf Pro, Seagate Exos — are rated for 24/7 operation at higher vibration tolerance than desktop drives. All are CMR. Current sweet spot for cost efficiency: 20–24 TB CMR nearline drives. HAMR drives (30 TB+) are available but command a premium that takes time to amortise on lower-access nearline workloads.
+
+**Network Infrastructure**
+
+Gigabit Ethernet (1 GbE) is no longer adequate for multi-user post-production. 10 GbE is the current baseline for small-to-medium studios. Large facilities increasingly deploy 25 GbE or 100 GbE for primary fabric, with 10 GbE edge switches serving edit suites. Link aggregation (LACP) across multiple 10 GbE connections can achieve near-25 GbE throughput to a NAS before upgrading switches.
+
+WeVirtual's recommended architecture pairs nearline HDD NAS (10 GbE connected) with automated LTO tape writes using LTFS, creating a continuous archive pipeline where completed projects migrate from NAS to tape on a defined schedule — typically 90 days post-delivery.`
+  },
+  {
+    id: "lto-roadmap-future",
+    title: "The LTO Roadmap: What Comes After LTO-10?",
+    excerpt: "The LTO Consortium has published a roadmap extending to LTO-14. We examine the technical challenges, expected capacities, and what the next decade of tape storage looks like.",
+    date: "April 14, 2026",
+    author: "Rohan Mehta",
+    category: "LTO Technology",
+    content: `The LTO Consortium's published roadmap currently extends to LTO-14, with projected capacities scaling exponentially beyond the 18 TB of LTO-9. Understanding this roadmap helps media companies plan capital expenditure cycles and migration strategies for the coming decade.
+
+**LTO-10 Through LTO-14 — Projected Specifications**
+
+LTO-10: 36 TB native / 900 MB/s — hardware arriving 2026
+LTO-11: 72 TB native / 1,100 MB/s — projected 2028
+LTO-12: 144 TB native / 1,500 MB/s — projected 2030
+LTO-13: 288 TB native / 2,000 MB/s — projected 2032
+LTO-14: 576 TB native / 2,700 MB/s — projected 2034
+
+These capacities assume continued progress in areal density through improved magnetic particle formulations and servo track density. FUJIFILM and Sony are the key technology suppliers whose R&D timelines will ultimately determine whether these projections hold.
+
+**Technical Challenges on the Path to LTO-14**
+
+The primary technical challenge is the superparamagnetic limit — the point at which magnetic domains become so small that thermal fluctuations can flip their polarity spontaneously. Barium Ferrite and Strontium Ferrite particles approach this limit as track pitch decreases. Advanced annealing processes and particle geometry control are the tools manufacturers are using to push the boundary.
+
+Servo track accuracy is a parallel challenge: at LTO-12+ track densities, the read/write head positioning system must achieve sub-nanometre accuracy across a cartridge that may shift slightly with temperature and humidity.
+
+**Planning Your Migration Cycle**
+
+WeVirtual recommends a two-generation migration rhythm: migrate when your current generation is two generations behind the leading edge. This means LTO-8 clients should be planning LTO-10 migration now. LTO-9 clients have until LTO-11 becomes mainstream. Waiting longer risks hardware availability issues and widening compatibility gaps.`
   }
 ];
+function getAutoPopulatedBlogs(count = 2) {
+  return ARTICLES.slice(0, count);
+}
 const CULTURE_TRIPS = [
   {
     id: "jamaica-2024",
@@ -40809,49 +42167,130 @@ const CULTURE_TRIPS = [
 ];
 const STORE_ITEMS = [
   {
-    id: "white-tshirt",
-    name: "White T-Shirt",
-    price: 30,
-    description: "100% organic cotton. Screen-printed wordmark. Heavyweight enough to mean it.",
-    imageUrl: "/assets/images/store-tshirt.jpg"
+    id: "hindustan-unilever",
+    name: "Hindustan Unilever",
+    price: 0,
+    description: "",
+    imageUrl: ""
   },
   {
-    id: "tote-bag",
-    name: "Tote Bag",
-    price: 30,
-    description: "Natural canvas, black print. Carries your laptop, your lunch, your moral complexity.",
-    imageUrl: "/assets/images/store-tote.jpg"
+    id: "client-slot-2",
+    name: "",
+    price: 0,
+    description: "",
+    imageUrl: ""
   },
   {
-    id: "cotton-socks",
-    name: "Cotton Socks",
-    price: 20,
-    description: "Ribbed crew socks. White with black logo heel. Made to last.",
-    imageUrl: "/assets/images/store-socks.jpg"
+    id: "client-slot-3",
+    name: "",
+    price: 0,
+    description: "",
+    imageUrl: ""
   },
   {
-    id: "beanie-hat",
-    name: "Beanie Hat",
-    price: 20,
-    description: "Merino blend. Black. Subtle embroidered logo. Essential for Montreal winters.",
-    imageUrl: "/assets/images/store-beanie.jpg"
+    id: "client-slot-4",
+    name: "",
+    price: 0,
+    description: "",
+    imageUrl: ""
   },
   {
-    id: "hoodie",
-    name: "Hoodie",
-    price: 90,
-    description: "Heavyweight fleece. Oversized fit. The one you'll wear every day and never want to wash.",
-    imageUrl: "/assets/images/store-hoodie.jpg"
+    id: "client-slot-5",
+    name: "",
+    price: 0,
+    description: "",
+    imageUrl: ""
+  },
+  {
+    id: "client-slot-6",
+    name: "",
+    price: 0,
+    description: "",
+    imageUrl: ""
   }
 ];
+function useCinematicScroll() {
+  const [scrollYValue, setScrollYValue] = reactExports.useState(0);
+  const observerRef = reactExports.useRef(null);
+  const containerRef = reactExports.useRef(null);
+  const { scrollY, scrollYProgress } = useScroll();
+  const smoothProgress = useSpring(scrollYProgress, {
+    stiffness: 80,
+    damping: 20,
+    restDelta: 1e-3
+  });
+  const globalParallaxY = useTransform(scrollY, [0, 2e3], [0, -120]);
+  reactExports.useEffect(() => {
+    const onScroll = () => setScrollYValue(window.scrollY);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+  reactExports.useEffect(() => {
+    if (typeof IntersectionObserver === "undefined") return;
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        var _a3;
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("revealed");
+            (_a3 = observerRef.current) == null ? void 0 : _a3.unobserve(entry.target);
+          }
+        }
+      },
+      { threshold: 0.15, rootMargin: "0px 0px -40px 0px" }
+    );
+    const observe = () => {
+      var _a3;
+      const items = document.querySelectorAll(".stagger-item:not(.revealed)");
+      for (const el of items) (_a3 = observerRef.current) == null ? void 0 : _a3.observe(el);
+    };
+    observe();
+    const mutationObserver = new MutationObserver(observe);
+    mutationObserver.observe(document.body, { childList: true, subtree: true });
+    return () => {
+      var _a3;
+      (_a3 = observerRef.current) == null ? void 0 : _a3.disconnect();
+      mutationObserver.disconnect();
+    };
+  }, []);
+  const triggerTextReveal = reactExports.useCallback((selector) => {
+    const els = document.querySelectorAll(selector);
+    for (const el of els) {
+      el.classList.remove("text-reveal-mask");
+      void el.offsetWidth;
+      el.classList.add("text-reveal-mask");
+    }
+  }, []);
+  return {
+    scrollY: scrollYValue,
+    triggerTextReveal,
+    containerRef,
+    scrollYMotion: scrollY,
+    scrollYProgress,
+    smoothProgress,
+    globalParallaxY
+  };
+}
+const PASTEL_GREEN$3 = "#d4edda";
+const PASTEL_GREEN_LIGHT = "#e8f5eb";
+const ORANGE$3 = "#e05c00";
+const CUSTOM_EASE$3 = [0.77, 0, 0.175, 1];
 function ArticleDetailPage() {
+  useCinematicScroll();
   const { id: id2 } = useParams({ from: "/articles/$id" });
   const article = ARTICLES.find((a2) => a2.id === id2);
+  const heroRef = reactExports.useRef(null);
+  const { scrollYProgress } = useScroll({
+    target: heroRef,
+    offset: ["start start", "end start"]
+  });
+  const heroParallaxY = useTransform(scrollYProgress, [0, 1], [0, 80]);
   if (!article) {
     return /* @__PURE__ */ jsxRuntimeExports.jsx(
       "div",
       {
-        className: "min-h-screen flex flex-col items-center justify-center bg-background text-foreground",
+        className: "min-h-screen flex flex-col items-center justify-center text-black",
+        style: { background: PASTEL_GREEN_LIGHT },
         "data-ocid": "article_detail.error_state",
         children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
           motion.div,
@@ -40861,18 +42300,18 @@ function ArticleDetailPage() {
             transition: { duration: 0.5, ease: "easeOut" },
             className: "text-center px-6",
             children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-label text-muted-foreground mb-4", children: "404" }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "text-h2 mb-6", children: "Article not found" }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground font-body mb-10 max-w-sm mx-auto leading-relaxed", children: "This article doesn't exist or may have been removed." }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-label text-[#3d3d3d] mb-4", children: "404" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "text-h2 mb-6 text-black", children: "Article not found" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-body text-[#2d2d2d] mb-10 max-w-sm mx-auto leading-relaxed", children: "This article doesn't exist or may have been removed." }),
               /* @__PURE__ */ jsxRuntimeExports.jsxs(
                 Link,
                 {
                   to: "/",
-                  className: "inline-flex items-center gap-2 text-label hover:opacity-60 transition-smooth",
+                  className: "inline-flex items-center gap-2 text-label text-[#2d2d2d] hover:opacity-60 transition-smooth",
                   "data-ocid": "article_detail.back_link",
                   children: [
                     /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowLeft, { className: "w-4 h-4" }),
-                    "Back to home"
+                    "Back to Blog"
                   ]
                 }
               )
@@ -40883,157 +42322,498 @@ function ArticleDetailPage() {
     );
   }
   const paragraphs = article.content.split("\n\n").map((p2, i) => ({ text: p2.trim(), key: `para-${i}` })).filter((p2) => p2.text);
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { "data-ocid": "article_detail.page", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "section-dark px-6 md:px-16 pt-10 pb-20", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
-        motion.div,
-        {
-          initial: { opacity: 0, y: -8 },
-          animate: { opacity: 1, y: 0 },
-          transition: { duration: 0.4, ease: "easeOut" },
-          className: "mb-12",
-          children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
-            Link,
-            {
-              to: "/",
-              className: "inline-flex items-center gap-2 text-label opacity-60 hover:opacity-100 transition-smooth",
-              "data-ocid": "article_detail.back_link",
-              children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowLeft, { className: "w-4 h-4" }),
-                "Back to articles"
-              ]
-            }
-          )
-        }
-      ),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "max-w-4xl mx-auto", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
-          motion.p,
-          {
-            initial: { opacity: 0, y: 12 },
-            animate: { opacity: 1, y: 0 },
-            transition: { duration: 0.5, delay: 0.1, ease: "easeOut" },
-            className: "text-label opacity-50 mb-6",
-            children: "Essay"
-          }
-        ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
-          motion.h1,
-          {
-            initial: { opacity: 0, y: 20 },
-            animate: { opacity: 1, y: 0 },
-            transition: { duration: 0.6, delay: 0.2, ease: "easeOut" },
-            className: "font-display text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-tight mb-10",
-            "data-ocid": "article_detail.title",
-            children: article.title
-          }
-        ),
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    motion.div,
+    {
+      initial: { opacity: 0 },
+      animate: { opacity: 1 },
+      transition: { duration: 0.6 },
+      "data-ocid": "article_detail.page",
+      children: [
         /* @__PURE__ */ jsxRuntimeExports.jsxs(
-          motion.div,
+          motion.section,
           {
-            initial: { opacity: 0 },
-            animate: { opacity: 1 },
-            transition: { duration: 0.5, delay: 0.4, ease: "easeOut" },
-            className: "flex flex-wrap items-center gap-6 border-t border-primary-foreground/20 pt-8",
+            ref: heroRef,
+            className: "px-6 md:px-16 pt-10 pb-20 overflow-hidden",
+            style: { background: PASTEL_GREEN$3, color: "#111", y: heroParallaxY },
             children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-label opacity-40 mb-1", children: "Author" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                motion.div,
+                {
+                  initial: { opacity: 0, y: -8 },
+                  animate: { opacity: 1, y: 0 },
+                  transition: { duration: 0.4, ease: "easeOut" },
+                  className: "mb-12",
+                  children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                    Link,
+                    {
+                      to: "/blog",
+                      className: "inline-flex items-center gap-2 text-label text-[#3d3d3d] hover:text-black transition-smooth",
+                      "data-ocid": "article_detail.back_link",
+                      children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowLeft, { className: "w-4 h-4" }),
+                        "Back to Blog"
+                      ]
+                    }
+                  )
+                }
+              ),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "max-w-4xl mx-auto", children: [
                 /* @__PURE__ */ jsxRuntimeExports.jsx(
-                  "p",
+                  motion.div,
                   {
-                    className: "font-body font-medium",
-                    "data-ocid": "article_detail.author",
-                    children: article.author
+                    initial: { opacity: 0, y: 12 },
+                    animate: { opacity: 1, y: 0 },
+                    transition: { duration: 0.5, delay: 0.05, ease: "easeOut" },
+                    className: "mb-4 flex items-center gap-3",
+                    children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                      "span",
+                      {
+                        className: "text-[11px] font-body font-semibold uppercase tracking-widest px-3 py-1 rounded-full",
+                        style: { background: ORANGE$3, color: "#fff" },
+                        children: article.category
+                      }
+                    )
                   }
-                )
-              ] }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-px h-8 bg-primary-foreground/20 hidden sm:block" }),
-              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-label opacity-40 mb-1", children: "Published" }),
+                ),
                 /* @__PURE__ */ jsxRuntimeExports.jsx(
-                  "p",
+                  motion.h1,
                   {
-                    className: "font-body font-medium",
-                    "data-ocid": "article_detail.date",
-                    children: article.date
+                    initial: { clipPath: "inset(0 100% 0 0)" },
+                    animate: { clipPath: "inset(0 0% 0 0)" },
+                    transition: { duration: 1.1, ease: CUSTOM_EASE$3, delay: 0.15 },
+                    className: "font-display text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-tight mb-10 text-black",
+                    "data-ocid": "article_detail.title",
+                    children: article.title
+                  }
+                ),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                  motion.div,
+                  {
+                    initial: { opacity: 0, y: 30 },
+                    animate: { opacity: 1, y: 0 },
+                    transition: { delay: 0.4, duration: 0.8 },
+                    className: "flex flex-wrap items-center gap-6 border-t pt-8",
+                    style: { borderColor: "rgba(0,0,0,0.12)" },
+                    children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-label text-[#555555] mb-1", children: "Author" }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx(
+                          "p",
+                          {
+                            className: "font-body font-semibold text-black",
+                            "data-ocid": "article_detail.author",
+                            children: article.author
+                          }
+                        )
+                      ] }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsx(
+                        "div",
+                        {
+                          className: "w-px h-8 hidden sm:block",
+                          style: { background: "rgba(0,0,0,0.15)" }
+                        }
+                      ),
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-label text-[#555555] mb-1", children: "Published" }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx(
+                          "p",
+                          {
+                            className: "font-body font-semibold text-black",
+                            "data-ocid": "article_detail.date",
+                            children: article.date
+                          }
+                        )
+                      ] })
+                    ]
                   }
                 )
               ] })
             ]
           }
-        )
-      ] })
-    ] }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx("section", { className: "section-light px-6 md:px-16 py-20", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "max-w-3xl mx-auto", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
-        motion.blockquote,
-        {
-          initial: { opacity: 0, x: -16 },
-          whileInView: { opacity: 1, x: 0 },
-          viewport: { once: true },
-          transition: { duration: 0.6, ease: "easeOut" },
-          className: "border-l-4 border-foreground pl-6 mb-14",
-          "data-ocid": "article_detail.excerpt",
-          children: /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-display text-xl md:text-2xl font-semibold leading-snug text-foreground", children: article.excerpt })
-        }
-      ),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "space-y-6", "data-ocid": "article_detail.content", children: paragraphs.map(({ text, key }, i) => {
-        const headingMatch = text.match(/^\*\*(.+?)\*\*$/);
-        if (headingMatch) {
-          return /* @__PURE__ */ jsxRuntimeExports.jsx(
-            motion.h2,
-            {
-              initial: { opacity: 0, y: 10 },
-              whileInView: { opacity: 1, y: 0 },
-              viewport: { once: true },
-              transition: { duration: 0.5, delay: 0.05, ease: "easeOut" },
-              className: "font-display text-2xl md:text-3xl font-bold tracking-tight mt-10 mb-2",
-              children: headingMatch[1]
-            },
-            key
-          );
-        }
-        return /* @__PURE__ */ jsxRuntimeExports.jsx(
-          motion.p,
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "section",
           {
-            initial: { opacity: 0, y: 10 },
-            whileInView: { opacity: 1, y: 0 },
-            viewport: { once: true },
-            transition: {
-              duration: 0.5,
-              delay: i * 0.04,
-              ease: "easeOut"
+            className: "px-6 md:px-16 py-20",
+            style: { background: PASTEL_GREEN_LIGHT, color: "#111" },
+            children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "max-w-3xl mx-auto", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                motion.blockquote,
+                {
+                  initial: { opacity: 0, x: -16 },
+                  whileInView: { opacity: 1, x: 0 },
+                  viewport: { once: true },
+                  transition: { duration: 0.6, ease: "easeOut" },
+                  className: "border-l-4 pl-6 mb-14",
+                  style: { borderColor: ORANGE$3 },
+                  "data-ocid": "article_detail.excerpt",
+                  children: /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-display text-xl md:text-2xl font-semibold leading-snug text-black", children: article.excerpt })
+                }
+              ),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "space-y-6", "data-ocid": "article_detail.content", children: paragraphs.map(({ text, key }, i) => {
+                const headingMatch = text.match(/^\*\*(.+?)\*\*$/);
+                if (headingMatch) {
+                  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    motion.h2,
+                    {
+                      initial: { opacity: 0, y: 20 },
+                      whileInView: { opacity: 1, y: 0 },
+                      viewport: { once: true, margin: "-40px" },
+                      transition: {
+                        duration: 0.6,
+                        delay: i * 0.1,
+                        ease: "easeOut"
+                      },
+                      className: "font-display text-2xl md:text-3xl font-bold tracking-tight mt-10 mb-2 text-black",
+                      children: headingMatch[1]
+                    },
+                    key
+                  );
+                }
+                return /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  motion.p,
+                  {
+                    initial: { opacity: 0, y: 20 },
+                    whileInView: { opacity: 1, y: 0 },
+                    viewport: { once: true, margin: "-40px" },
+                    transition: {
+                      duration: 0.6,
+                      delay: i * 0.1,
+                      ease: "easeOut"
+                    },
+                    className: "font-body text-lg leading-8",
+                    style: { color: "#2d2d2d" },
+                    children: text
+                  },
+                  key
+                );
+              }) }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                motion.div,
+                {
+                  initial: { opacity: 0 },
+                  whileInView: { opacity: 1 },
+                  viewport: { once: true },
+                  transition: { duration: 0.5, delay: 0.2 },
+                  className: "mt-20 pt-10 border-t flex gap-6",
+                  style: { borderColor: "rgba(0,0,0,0.12)" },
+                  children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                    Link,
+                    {
+                      to: "/blog",
+                      className: "inline-flex items-center gap-2 text-label text-[#3d3d3d] hover:text-black transition-smooth",
+                      "data-ocid": "article_detail.bottom_back_link",
+                      children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowLeft, { className: "w-4 h-4" }),
+                        "Back to Blog"
+                      ]
+                    }
+                  )
+                }
+              )
+            ] })
+          }
+        )
+      ]
+    }
+  );
+}
+const PASTEL_GREEN$2 = "rgba(212,237,218,0.88)";
+const PASTEL_GREEN_CARD$2 = "rgba(234,246,237,0.92)";
+const PASTEL_GREEN_HOVER$2 = "rgba(194,229,203,0.92)";
+const ORANGE$2 = "#e05c00";
+const CATEGORY_COLORS = {
+  "LTO History": "#e05c00",
+  "LTO Technology": "#2e7d52",
+  "HDD News": "#1a5f8a",
+  "SSD News": "#6b3fa0",
+  "Storage Trends": "#a05c00"
+};
+const ALL_CATEGORIES = [
+  "All",
+  ...Array.from(new Set(ARTICLES.map((a2) => a2.category)))
+];
+const CUSTOM_EASE$2 = [0.77, 0, 0.175, 1];
+function CategoryBadge({ category }) {
+  const color2 = CATEGORY_COLORS[category] ?? ORANGE$2;
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    "span",
+    {
+      className: "text-[10px] font-body font-semibold uppercase tracking-widest px-2.5 py-0.5 rounded-full",
+      style: { background: color2, color: "#fff" },
+      children: category
+    }
+  );
+}
+function BlogCard({ article, index: index2 }) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    motion.article,
+    {
+      initial: { opacity: 0, y: 40, scale: 0.96 },
+      whileInView: { opacity: 1, y: 0, scale: 1 },
+      viewport: { once: true, margin: "-40px" },
+      transition: { delay: index2 * 0.08, duration: 0.7, ease: CUSTOM_EASE$2 },
+      whileHover: {
+        y: -6,
+        scale: 1.02,
+        boxShadow: "0 16px 40px rgba(0,0,0,0.1)",
+        transition: { type: "spring", stiffness: 340, damping: 28 }
+      },
+      className: "group flex flex-col gap-4 rounded-xl p-6 border cursor-pointer",
+      style: {
+        background: PASTEL_GREEN_CARD$2,
+        borderColor: "rgba(0,0,0,0.1)"
+      },
+      onMouseEnter: (e) => {
+        e.currentTarget.style.background = PASTEL_GREEN_HOVER$2;
+        e.currentTarget.style.borderColor = "rgba(0,0,0,0.2)";
+      },
+      onMouseLeave: (e) => {
+        e.currentTarget.style.background = PASTEL_GREEN_CARD$2;
+        e.currentTarget.style.borderColor = "rgba(0,0,0,0.1)";
+      },
+      "data-ocid": `blog.item.${index2 + 1}`,
+      children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-3 flex-wrap", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(CategoryBadge, { category: article.category }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-body text-xs text-[#555555] uppercase tracking-widest", children: article.date })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "h3",
+          {
+            className: "font-display font-bold text-black leading-tight transition-all duration-300 group-hover:scale-[1.03] origin-left",
+            style: { fontSize: "clamp(1.1rem, 2.2vw, 1.4rem)" },
+            children: article.title
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "p",
+          {
+            className: "font-body text-sm leading-relaxed line-clamp-3",
+            style: { color: "#2d2d2d" },
+            children: article.excerpt
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          "div",
+          {
+            className: "flex items-center justify-between pt-3 mt-auto border-t",
+            style: { borderColor: "rgba(0,0,0,0.1)" },
+            children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                "span",
+                {
+                  className: "font-body text-xs font-medium",
+                  style: { color: "#3d3d3d" },
+                  children: [
+                    "by ",
+                    article.author
+                  ]
+                }
+              ),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                Link,
+                {
+                  to: "/articles/$id",
+                  params: { id: article.id },
+                  className: "inline-flex items-center gap-1.5 text-sm font-body font-semibold transition-all duration-300 hover:gap-2.5",
+                  style: { color: ORANGE$2 },
+                  "data-ocid": `blog.read_more_link.${index2 + 1}`,
+                  children: [
+                    "Read more ",
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowRight, { size: 13 })
+                  ]
+                }
+              )
+            ]
+          }
+        )
+      ]
+    }
+  );
+}
+function BlogPage() {
+  useCinematicScroll();
+  const [activeCategory, setActiveCategory] = reactExports.useState("All");
+  const filtered = activeCategory === "All" ? ARTICLES : ARTICLES.filter((a2) => a2.category === activeCategory);
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    motion.div,
+    {
+      initial: { opacity: 0 },
+      animate: { opacity: 1 },
+      transition: { duration: 0.6 },
+      style: { background: PASTEL_GREEN$2, minHeight: "100vh", color: "#111" },
+      children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          "section",
+          {
+            className: "px-6 md:px-16 pt-12 pb-10",
+            style: {
+              background: PASTEL_GREEN$2,
+              borderBottom: "1px solid rgba(0,0,0,0.08)"
             },
-            className: "font-body text-lg leading-8 text-foreground/85",
-            children: text
-          },
-          key
-        );
-      }) }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
-        motion.div,
-        {
-          initial: { opacity: 0 },
-          whileInView: { opacity: 1 },
-          viewport: { once: true },
-          transition: { duration: 0.5, delay: 0.2 },
-          className: "mt-20 pt-10 border-t border-border",
-          children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
-            Link,
-            {
-              to: "/",
-              className: "inline-flex items-center gap-2 text-label hover:opacity-50 transition-smooth",
-              "data-ocid": "article_detail.bottom_back_link",
-              children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowLeft, { className: "w-4 h-4" }),
-                "Back to articles"
-              ]
-            }
-          )
-        }
-      )
-    ] }) })
-  ] });
+            children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                motion.div,
+                {
+                  initial: { opacity: 0, y: -8 },
+                  animate: { opacity: 1, y: 0 },
+                  transition: { duration: 0.4, ease: "easeOut" },
+                  className: "mb-8",
+                  children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                    Link,
+                    {
+                      to: "/",
+                      className: "inline-flex items-center gap-2 text-label text-[#3d3d3d] hover:text-black transition-smooth",
+                      "data-ocid": "blog.back_link",
+                      children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowLeft, { className: "w-4 h-4" }),
+                        "Back to Home"
+                      ]
+                    }
+                  )
+                }
+              ),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                motion.div,
+                {
+                  initial: { opacity: 0, y: 16 },
+                  animate: { opacity: 1, y: 0 },
+                  transition: { duration: 0.6, delay: 0.1, ease: "easeOut" },
+                  className: "flex flex-col gap-3 max-w-3xl",
+                  children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(
+                      motion.span,
+                      {
+                        initial: { opacity: 0, x: -20 },
+                        animate: { opacity: 1, x: 0 },
+                        transition: { duration: 0.5, delay: 0.15, ease: "easeOut" },
+                        className: "text-[11px] font-semibold font-body tracking-[0.22em] uppercase text-[#3d3d3d]",
+                        children: "WeVirtual"
+                      }
+                    ),
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(
+                      motion.h1,
+                      {
+                        initial: { clipPath: "inset(0 100% 0 0)" },
+                        animate: { clipPath: "inset(0 0% 0 0)" },
+                        transition: { duration: 1.1, ease: CUSTOM_EASE$2, delay: 0.2 },
+                        className: "font-display font-bold text-black leading-tight tracking-tight",
+                        style: { fontSize: "clamp(3rem, 8vw, 6rem)" },
+                        children: "Blog"
+                      }
+                    ),
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(
+                      motion.p,
+                      {
+                        initial: { opacity: 0, y: 30 },
+                        animate: { opacity: 1, y: 0 },
+                        transition: { delay: 0.4, duration: 0.8, ease: "easeOut" },
+                        className: "font-body text-base md:text-lg text-[#2d2d2d] max-w-xl leading-relaxed",
+                        children: "Storage technology insights, LTO tape history, HDD and SSD news — two new posts published daily by the WeVirtual team."
+                      }
+                    )
+                  ]
+                }
+              )
+            ]
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "section",
+          {
+            className: "px-6 md:px-16 py-6",
+            style: { background: PASTEL_GREEN$2 },
+            children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+              motion.div,
+              {
+                className: "flex flex-wrap gap-2 relative",
+                role: "tablist",
+                "aria-label": "Blog category filter",
+                children: ALL_CATEGORIES.map((cat, idx) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                  motion.button,
+                  {
+                    type: "button",
+                    role: "tab",
+                    "aria-selected": activeCategory === cat,
+                    onClick: () => setActiveCategory(cat),
+                    initial: { opacity: 0, x: -20 },
+                    animate: { opacity: 1, x: 0 },
+                    transition: {
+                      delay: 0.05 * idx,
+                      duration: 0.45,
+                      ease: "easeOut"
+                    },
+                    className: "px-4 py-1.5 text-xs font-body font-semibold uppercase tracking-widest rounded-full border transition-all duration-200 relative",
+                    style: activeCategory === cat ? { background: ORANGE$2, color: "#fff", borderColor: ORANGE$2 } : {
+                      background: "transparent",
+                      color: "#3d3d3d",
+                      borderColor: "rgba(0,0,0,0.2)"
+                    },
+                    "data-ocid": "blog.filter.tab",
+                    children: [
+                      activeCategory === cat && /* @__PURE__ */ jsxRuntimeExports.jsx(
+                        motion.span,
+                        {
+                          layoutId: "activeTab",
+                          className: "absolute inset-0 rounded-full",
+                          style: { background: ORANGE$2, zIndex: -1 },
+                          transition: { type: "spring", stiffness: 400, damping: 35 }
+                        }
+                      ),
+                      cat
+                    ]
+                  },
+                  cat
+                ))
+              }
+            )
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          "section",
+          {
+            className: "px-6 md:px-16 pb-24",
+            style: { background: PASTEL_GREEN$2 },
+            children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(AnimatePresence, { mode: "wait", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                motion.div,
+                {
+                  initial: { opacity: 0, y: 16 },
+                  animate: { opacity: 1, y: 0 },
+                  exit: { opacity: 0, y: -10 },
+                  transition: { duration: 0.35 },
+                  className: "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6",
+                  children: filtered.map((article, i) => /* @__PURE__ */ jsxRuntimeExports.jsx(BlogCard, { article, index: i }, article.id))
+                },
+                activeCategory
+              ) }),
+              filtered.length === 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                "div",
+                {
+                  className: "py-20 flex flex-col items-center gap-4",
+                  "data-ocid": "blog.empty_state",
+                  children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-display text-2xl text-[#555555]", children: "No posts in this category" }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(
+                      "button",
+                      {
+                        type: "button",
+                        onClick: () => setActiveCategory("All"),
+                        className: "text-sm font-body font-semibold text-[#3d3d3d] hover:text-black transition-smooth underline",
+                        children: "Show all posts"
+                      }
+                    )
+                  ]
+                }
+              )
+            ]
+          }
+        )
+      ]
+    }
+  );
 }
 function r(e) {
   var t, f, n = "";
@@ -43682,7 +45462,7 @@ const CATEGORIES = [
   "E-commerce",
   "Content"
 ];
-const fadeUp = {
+const fadeUp$1 = {
   hidden: { opacity: 0, y: 28 },
   visible: {
     opacity: 1,
@@ -43690,35 +45470,108 @@ const fadeUp = {
     transition: { duration: 0.7, ease: "easeOut" }
   }
 };
-const stagger = {
+const stagger$1 = {
   hidden: {},
   visible: { transition: { staggerChildren: 0.1 } }
 };
-const LIGHT_ORANGE = "#fff0d8";
-const LIGHT_ORANGE_ALT = "#ffe8c8";
-const ORANGE = "#e05c00";
+const wordContainerVariants = {
+  hidden: {},
+  visible: {
+    transition: {
+      staggerChildren: 0.06,
+      delayChildren: 0.1
+    }
+  }
+};
+const wordVariants = {
+  hidden: { opacity: 0, y: 40, filter: "blur(8px)" },
+  visible: {
+    opacity: 1,
+    y: 0,
+    filter: "blur(0px)",
+    transition: {
+      duration: 0.9,
+      ease: [0.16, 1, 0.3, 1]
+    }
+  }
+};
+const cardReveal = (i) => ({
+  hidden: { opacity: 0, y: 50, scale: 0.95 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: {
+      duration: 0.75,
+      delay: i * 0.1,
+      ease: [0.16, 1, 0.3, 1]
+    }
+  }
+});
+const serviceCardReveal = (i) => ({
+  hidden: { opacity: 0, y: 40, scale: 0.95 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: {
+      duration: 0.7,
+      delay: i * 0.12,
+      ease: [0.16, 1, 0.3, 1]
+    }
+  }
+});
+const blogCardReveal = (i) => ({
+  hidden: { opacity: 0, x: -30 },
+  visible: {
+    opacity: 1,
+    x: 0,
+    transition: {
+      duration: 0.7,
+      delay: i * 0.15,
+      ease: [0.16, 1, 0.3, 1]
+    }
+  }
+});
+const LIGHT_ORANGE$1 = "linear-gradient(160deg, #fff8ee 0%, #fff0d8 50%, #ffe8c4 100%)";
+const PASTEL_GREEN$1 = "rgba(212,237,218,0.88)";
+const PASTEL_GREEN_CARD$1 = "rgba(234,246,237,0.92)";
+const PASTEL_GREEN_HOVER$1 = "rgba(194,229,203,0.92)";
+const ORANGE$1 = "#e05c00";
 function SectionLabel({ children }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-[11px] font-semibold font-body tracking-[0.22em] uppercase text-black/40", children });
+  return /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-[11px] font-semibold font-body tracking-[0.22em] uppercase text-[#3d3d3d]", children });
 }
-function ProjectCard({ project }) {
+function ProjectCard({
+  project,
+  index: index2 = 0
+}) {
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(
     motion.div,
     {
-      variants: fadeUp,
+      initial: "hidden",
+      whileInView: "visible",
+      viewport: { once: true, margin: "-60px" },
+      variants: cardReveal(index2),
+      whileHover: {
+        y: -8,
+        scale: 1.02,
+        boxShadow: "0 24px 48px rgba(0,0,0,0.12)",
+        transition: { type: "spring", stiffness: 300, damping: 20 }
+      },
       className: "group border border-black/10 p-6 md:p-8 flex flex-col gap-4 hover:border-black/30 transition-smooth",
       children: [
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-start justify-between gap-4", children: [
           /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-1 min-w-0", children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-[11px] font-body font-semibold tracking-widest uppercase text-black/40", children: project.category }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-[11px] font-body font-semibold tracking-widest uppercase text-[#3d3d3d]", children: project.category }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { className: "font-display text-xl md:text-2xl font-bold text-black leading-tight truncate", children: project.title })
           ] }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-body text-xs text-black/30 shrink-0 mt-1 tracking-wide", children: project.year })
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-body text-xs text-[#555555] shrink-0 mt-1 tracking-wide", children: project.year })
         ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-body text-black/55 text-sm leading-relaxed line-clamp-3", children: project.description }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-body text-[#2d2d2d] text-sm leading-relaxed line-clamp-3", children: project.description }),
         /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex flex-wrap gap-2", children: project.tags.slice(0, 4).map((tag) => /* @__PURE__ */ jsxRuntimeExports.jsx(
           "span",
           {
-            className: "text-[10px] font-body font-medium px-2 py-0.5 border border-black/15 text-black/45 uppercase tracking-wide",
+            className: "text-[10px] font-body font-medium px-2 py-0.5 border border-black/15 text-[#3d3d3d] uppercase tracking-wide",
             children: tag
           },
           tag
@@ -43728,7 +45581,7 @@ function ProjectCard({ project }) {
           {
             to: "/projects/$id",
             params: { id: project.id },
-            className: "mt-auto inline-flex items-center gap-2 text-sm font-body font-medium text-black/60 hover:text-black hover:gap-3 transition-all duration-300",
+            className: "mt-auto inline-flex items-center gap-2 text-sm font-body font-medium text-[#2d2d2d] hover:text-black hover:gap-3 transition-all duration-300",
             "data-ocid": "project.read_more_link",
             children: [
               "Read more ",
@@ -43750,7 +45603,7 @@ function ProjectGridSkeleton() {
         "div",
         {
           className: "p-8 flex flex-col gap-4",
-          style: { background: LIGHT_ORANGE },
+          style: { background: "rgba(212,237,218,0.88)" },
           "data-ocid": `featured_work.loading_state.${i}`,
           children: [
             /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { className: "h-3 w-20 bg-black/10" }),
@@ -43764,75 +45617,384 @@ function ProjectGridSkeleton() {
     }
   );
 }
+const TAGLINE_TOKENS = [
+  "With",
+  "over",
+  "two",
+  "decades",
+  "of",
+  "experience",
+  "in",
+  "the",
+  "media",
+  "and",
+  "entertainment",
+  "industry",
+  "internationally,",
+  "We",
+  "Virtual",
+  "helps",
+  "keep",
+  "your",
+  "media",
+  "secure",
+  "whilst",
+  "providing",
+  "fast",
+  "and",
+  "easy",
+  "access",
+  "to",
+  "your",
+  "marketing",
+  "teams."
+].map((w2, i) => ({ word: w2, id: `tw-${i}` }));
+function useBinaryWallpaper() {
+  const canvasRef = reactExports.useRef(null);
+  const cursorPos = reactExports.useRef({ x: -9999, y: -9999 });
+  const animFrameRef = reactExports.useRef(null);
+  const isAnimatingRef = reactExports.useRef(false);
+  const drawFrameRef = reactExports.useRef(null);
+  const gridRef = reactExports.useRef(null);
+  const handleMouseMove = reactExports.useCallback((e) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    cursorPos.current = {
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top
+    };
+    if (!isAnimatingRef.current && drawFrameRef.current) {
+      isAnimatingRef.current = true;
+      animFrameRef.current = requestAnimationFrame(drawFrameRef.current);
+    }
+  }, []);
+  reactExports.useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    const FONT_SIZE = 14;
+    const CELL = 20;
+    const DENT_RADIUS = 36;
+    const DENT_STRENGTH = 8;
+    const DECAY = 0.94;
+    const RESTORE = 0.18;
+    const BASE_ALPHA = 0.1;
+    const BOOST_ALPHA = 0.28;
+    const IDLE_THRESHOLD = 0.15;
+    const initGrid = () => {
+      canvas.width = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+      const cols = Math.ceil(canvas.width / CELL);
+      const rows = Math.ceil(canvas.height / CELL);
+      const total = cols * rows;
+      const chars = [];
+      const homeX = [];
+      const homeY = [];
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+          chars.push(Math.random() > 0.5 ? "1" : "0");
+          homeX.push(col * CELL + CELL / 2);
+          homeY.push(row * CELL + CELL);
+        }
+      }
+      gridRef.current = {
+        chars,
+        homeX,
+        homeY,
+        offX: new Array(total).fill(0),
+        offY: new Array(total).fill(0),
+        velX: new Array(total).fill(0),
+        velY: new Array(total).fill(0)
+      };
+    };
+    const drawStatic = () => {
+      const g2 = gridRef.current;
+      if (!g2) return;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.font = `${FONT_SIZE}px monospace`;
+      ctx.textAlign = "center";
+      ctx.fillStyle = `rgba(224,92,0,${BASE_ALPHA.toFixed(3)})`;
+      for (let i = 0; i < g2.chars.length; i++) {
+        ctx.fillText(g2.chars[i], g2.homeX[i], g2.homeY[i]);
+      }
+    };
+    const drawFrame = () => {
+      const g2 = gridRef.current;
+      if (!g2) {
+        isAnimatingRef.current = false;
+        return;
+      }
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.font = `${FONT_SIZE}px monospace`;
+      ctx.textAlign = "center";
+      const cx = cursorPos.current.x;
+      const cy = cursorPos.current.y;
+      const total = g2.chars.length;
+      let anyMotion = false;
+      for (let i = 0; i < total; i++) {
+        const hx = g2.homeX[i];
+        const hy = g2.homeY[i];
+        const dx = hx - cx;
+        const dy = hy - cy;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < DENT_RADIUS && dist > 0) {
+          const strength = (DENT_RADIUS - dist) / DENT_RADIUS * DENT_STRENGTH;
+          g2.velX[i] += dx / dist * strength * 0.4;
+          g2.velY[i] += dy / dist * strength * 0.4;
+        }
+        g2.velX[i] += -g2.offX[i] * RESTORE;
+        g2.velY[i] += -g2.offY[i] * RESTORE;
+        g2.velX[i] *= DECAY;
+        g2.velY[i] *= DECAY;
+        g2.offX[i] += g2.velX[i];
+        g2.offY[i] += g2.velY[i];
+        if (Math.abs(g2.offX[i]) > IDLE_THRESHOLD || Math.abs(g2.offY[i]) > IDLE_THRESHOLD) {
+          anyMotion = true;
+        }
+        let alpha2 = BASE_ALPHA;
+        if (dist < DENT_RADIUS) {
+          alpha2 = BASE_ALPHA + (DENT_RADIUS - dist) / DENT_RADIUS * (BOOST_ALPHA - BASE_ALPHA);
+        }
+        ctx.fillStyle = `rgba(224,92,0,${alpha2.toFixed(3)})`;
+        ctx.fillText(g2.chars[i], hx + g2.offX[i], hy + g2.offY[i]);
+      }
+      if (anyMotion) {
+        animFrameRef.current = requestAnimationFrame(drawFrame);
+      } else {
+        for (let i = 0; i < total; i++) {
+          g2.offX[i] = 0;
+          g2.offY[i] = 0;
+          g2.velX[i] = 0;
+          g2.velY[i] = 0;
+        }
+        drawStatic();
+        isAnimatingRef.current = false;
+      }
+    };
+    drawFrameRef.current = drawFrame;
+    initGrid();
+    drawStatic();
+    const onResize = () => {
+      if (animFrameRef.current !== null)
+        cancelAnimationFrame(animFrameRef.current);
+      isAnimatingRef.current = false;
+      initGrid();
+      drawStatic();
+    };
+    window.addEventListener("resize", onResize);
+    return () => {
+      if (animFrameRef.current !== null)
+        cancelAnimationFrame(animFrameRef.current);
+      window.removeEventListener("resize", onResize);
+    };
+  }, []);
+  return { canvasRef, handleMouseMove };
+}
 function HeroSection() {
+  const heroRef = reactExports.useRef(null);
+  const { scrollYProgress } = useScroll({
+    target: heroRef,
+    offset: ["start start", "end start"]
+  });
+  const heroY = useTransform(scrollYProgress, [0, 1], [0, -80]);
+  const bgParallaxY = useTransform(scrollYProgress, [0, 1], [0, -120]);
+  const { canvasRef, handleMouseMove } = useBinaryWallpaper();
+  const HEADLINE_WORDS = ["WeVirtual"];
+  const SUBTITLE_WORDS = ["Digital-First", "Media", "Archive"];
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(
     "section",
     {
+      ref: heroRef,
       className: "min-h-screen text-black flex flex-col justify-between px-6 md:px-16 pt-8 pb-10 relative overflow-hidden",
-      style: { background: LIGHT_ORANGE },
+      style: { background: LIGHT_ORANGE$1 },
       "data-ocid": "hero.section",
+      onMouseMove: handleMouseMove,
       children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("hr", { style: { borderColor: "rgba(0,0,0,0.1)" } }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex-1 flex flex-col justify-center gap-8 py-16", children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "canvas",
+          {
+            ref: canvasRef,
+            style: {
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "100%",
+              pointerEvents: "none",
+              zIndex: 0
+            }
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
           motion.div,
           {
-            initial: "hidden",
-            animate: "visible",
-            variants: stagger,
-            className: "flex flex-col gap-6",
-            children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx(motion.div, { variants: fadeUp, children: /* @__PURE__ */ jsxRuntimeExports.jsx(SectionLabel, { children: "Media Asset Management" }) }),
-              /* @__PURE__ */ jsxRuntimeExports.jsxs(
-                motion.h1,
-                {
-                  variants: fadeUp,
-                  className: "font-display font-bold leading-[0.88] tracking-[-0.02em]",
-                  style: { fontSize: "clamp(4.5rem, 13vw, 11rem)" },
-                  children: [
-                    /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-black", children: "WeVirtual" }),
-                    /* @__PURE__ */ jsxRuntimeExports.jsx(
-                      "sup",
-                      {
-                        className: "font-body font-normal align-super",
-                        style: { fontSize: "0.28em", color: ORANGE },
-                        children: "®"
-                      }
-                    )
-                  ]
+            className: "absolute inset-0 pointer-events-none",
+            style: { y: bgParallaxY, zIndex: 1 },
+            "aria-hidden": "true",
+            children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "div",
+              {
+                className: "absolute inset-0",
+                style: {
+                  background: "radial-gradient(ellipse 80% 60% at 60% 40%, rgba(224,92,0,0.06) 0%, transparent 70%), radial-gradient(ellipse 50% 40% at 20% 80%, rgba(255,200,100,0.07) 0%, transparent 60%)",
+                  animation: "pulseMesh 8s ease-in-out infinite"
                 }
-              ),
-              /* @__PURE__ */ jsxRuntimeExports.jsx(
-                motion.p,
-                {
-                  variants: fadeUp,
-                  className: "font-display text-xl md:text-3xl font-normal italic tracking-tight max-w-2xl",
-                  style: { color: "rgba(0,0,0,0.60)" },
-                  children: "Digital-First Media Archive"
-                }
-              ),
-              /* @__PURE__ */ jsxRuntimeExports.jsx(
-                motion.p,
-                {
-                  variants: fadeUp,
-                  className: "font-body text-base md:text-lg max-w-xl leading-relaxed",
-                  style: { color: "rgba(0,0,0,0.42)" },
-                  children: "Design and code are only tools of expression. What sets us and our work apart is people."
-                }
-              )
-            ]
+              }
+            )
           }
-        ) }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between gap-8", children: [
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "hr",
+          {
+            style: {
+              borderColor: "rgba(0,0,0,0.1)",
+              position: "relative",
+              zIndex: 2
+            }
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          motion.div,
+          {
+            style: { y: heroY },
+            className: "flex-1 flex flex-col justify-center gap-8 py-16 relative z-10",
+            children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+              motion.div,
+              {
+                initial: "hidden",
+                animate: "visible",
+                variants: stagger$1,
+                className: "flex flex-col gap-6",
+                children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(motion.div, { variants: fadeUp$1, children: /* @__PURE__ */ jsxRuntimeExports.jsx(SectionLabel, { children: "Media Asset Management" }) }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                    motion.h1,
+                    {
+                      initial: "hidden",
+                      animate: "visible",
+                      variants: wordContainerVariants,
+                      className: "font-display font-bold leading-[0.88] tracking-[-0.02em]",
+                      style: { fontSize: "clamp(4.5rem, 13vw, 11rem)" },
+                      children: [
+                        HEADLINE_WORDS.map((word) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+                          motion.span,
+                          {
+                            variants: wordVariants,
+                            className: "inline-block",
+                            style: { color: "#111111" },
+                            children: word
+                          },
+                          word
+                        )),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx(
+                          "sup",
+                          {
+                            className: "font-body font-normal align-super",
+                            style: { fontSize: "0.28em", color: ORANGE$1 },
+                            children: "®"
+                          }
+                        )
+                      ]
+                    }
+                  ),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    motion.p,
+                    {
+                      initial: "hidden",
+                      animate: "visible",
+                      variants: {
+                        hidden: {},
+                        visible: {
+                          transition: { staggerChildren: 0.06, delayChildren: 0.3 }
+                        }
+                      },
+                      className: "font-display text-xl md:text-3xl font-normal italic tracking-tight max-w-2xl",
+                      style: { color: "#2d2d2d" },
+                      children: SUBTITLE_WORDS.map((word) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+                        motion.span,
+                        {
+                          variants: wordVariants,
+                          className: "inline-block mr-[0.3em]",
+                          children: word
+                        },
+                        word
+                      ))
+                    }
+                  ),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    motion.p,
+                    {
+                      initial: "hidden",
+                      animate: "visible",
+                      variants: {
+                        hidden: {},
+                        visible: {
+                          transition: { staggerChildren: 0.04, delayChildren: 0.8 }
+                        }
+                      },
+                      className: "font-body text-base md:text-lg max-w-xl leading-relaxed",
+                      style: { color: "#3d3d3d" },
+                      children: TAGLINE_TOKENS.map((token) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+                        motion.span,
+                        {
+                          variants: {
+                            hidden: { opacity: 0, y: 8, filter: "blur(4px)" },
+                            visible: {
+                              opacity: 1,
+                              y: 0,
+                              filter: "blur(0px)",
+                              transition: { duration: 0.4 }
+                            }
+                          },
+                          className: "inline-block mr-[0.28em]",
+                          children: token.word
+                        },
+                        token.id
+                      ))
+                    }
+                  ),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    motion.div,
+                    {
+                      initial: { opacity: 0, scale: 0.9 },
+                      animate: { opacity: 1, scale: 1 },
+                      transition: { delay: 0.9, duration: 0.5, ease: [0.16, 1, 0.3, 1] },
+                      children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                        "button",
+                        {
+                          type: "button",
+                          onClick: () => {
+                            var _a3;
+                            return (_a3 = document.getElementById("work")) == null ? void 0 : _a3.scrollIntoView({ behavior: "smooth" });
+                          },
+                          className: "inline-flex items-center gap-3 border border-black/60 px-8 py-4 text-sm font-body font-semibold uppercase tracking-widest text-black hover:bg-black hover:text-white transition-smooth",
+                          "data-ocid": "hero.explore_button",
+                          children: [
+                            "Explore Our Work ",
+                            /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowRight, { size: 14 })
+                          ]
+                        }
+                      )
+                    }
+                  )
+                ]
+              }
+            )
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between gap-8 relative z-10", children: [
           /* @__PURE__ */ jsxRuntimeExports.jsx("hr", { className: "flex-1", style: { borderColor: "rgba(0,0,0,0.1)" } }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-body text-[11px] tracking-[0.2em] uppercase text-black/30 shrink-0", children: "©2008–2026" })
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-body text-[11px] tracking-[0.2em] uppercase text-[#555555] shrink-0", children: "©2008–2026" })
         ] }),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
           motion.div,
           {
-            className: "absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2",
+            className: "absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 z-10",
             initial: { opacity: 0, y: -10 },
             animate: { opacity: 1, y: 0 },
-            transition: { delay: 1.4, duration: 0.6 },
+            transition: { delay: 1.8, duration: 0.6 },
             "data-ocid": "hero.scroll_indicator",
             children: /* @__PURE__ */ jsxRuntimeExports.jsx(
               motion.div,
@@ -43843,7 +46005,7 @@ function HeroSection() {
                   duration: 2,
                   ease: "easeInOut"
                 },
-                children: /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowDown, { size: 16, style: { color: "rgba(0,0,0,0.35)" } })
+                children: /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowDown, { size: 16, style: { color: "#555555" } })
               }
             )
           }
@@ -43870,7 +46032,7 @@ function FeaturedWorkSection() {
       id: "work",
       className: "text-black py-20 px-6 md:px-16",
       style: {
-        background: LIGHT_ORANGE_ALT,
+        background: PASTEL_GREEN$1,
         borderTop: "1px solid rgba(0,0,0,0.08)"
       },
       "data-ocid": "featured_work.section",
@@ -43880,17 +46042,17 @@ function FeaturedWorkSection() {
           initial: "hidden",
           whileInView: "visible",
           viewport: { once: true, margin: "-80px" },
-          variants: stagger,
+          variants: stagger$1,
           className: "flex flex-col gap-10",
           children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsxs(motion.div, { variants: fadeUp, className: "flex flex-col gap-4", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs(motion.div, { variants: fadeUp$1, className: "flex flex-col gap-4", children: [
               /* @__PURE__ */ jsxRuntimeExports.jsx(SectionLabel, { children: "Featured Work" }),
               /* @__PURE__ */ jsxRuntimeExports.jsx("hr", { style: { borderColor: "rgba(0,0,0,0.1)" } })
             ] }),
             /* @__PURE__ */ jsxRuntimeExports.jsx(
               motion.div,
               {
-                variants: fadeUp,
+                variants: fadeUp$1,
                 className: "flex flex-wrap gap-0.5",
                 role: "tablist",
                 "aria-label": "Project category filter",
@@ -43902,7 +46064,7 @@ function FeaturedWorkSection() {
                     "aria-selected": activeCategory === cat,
                     onClick: () => setActiveCategory(cat),
                     "data-ocid": "featured_work.filter.tab",
-                    className: `px-4 py-2 text-sm font-body font-medium transition-smooth border-b-2 ${activeCategory === cat ? "border-black text-black" : "border-transparent text-black/38 hover:text-black/65"}`,
+                    className: `px-4 py-2 text-sm font-body font-medium transition-smooth border-b-2 ${activeCategory === cat ? "border-black text-black" : "border-transparent text-[#555555] hover:text-[#2d2d2d]"}`,
                     children: cat
                   },
                   cat
@@ -43912,26 +46074,25 @@ function FeaturedWorkSection() {
             isLoading ? /* @__PURE__ */ jsxRuntimeExports.jsx(ProjectGridSkeleton, {}) : !projects || projects.length === 0 ? /* @__PURE__ */ jsxRuntimeExports.jsxs(
               motion.div,
               {
-                variants: fadeUp,
+                variants: fadeUp$1,
                 className: "py-24 flex flex-col items-center gap-4 border border-black/10",
                 "data-ocid": "featured_work.empty_state",
                 children: [
-                  /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-display text-2xl text-black/35", children: "No projects found" }),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-body text-black/25 text-sm", children: "Check back soon — great work takes time." })
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-display text-2xl text-[#555555]", children: "No projects found" }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-body text-[#555555] text-sm", children: "Check back soon — great work takes time." })
                 ]
               }
             ) : /* @__PURE__ */ jsxRuntimeExports.jsx(
               motion.div,
               {
-                variants: stagger,
                 className: "grid grid-cols-1 md:grid-cols-2 gap-px",
-                style: { background: "rgba(0,0,0,0.08)" },
+                style: { perspective: 1e3, background: "rgba(0,0,0,0.08)" },
                 children: projects.map((project, i) => /* @__PURE__ */ jsxRuntimeExports.jsx(
                   "div",
                   {
-                    style: { background: LIGHT_ORANGE_ALT },
+                    style: { background: PASTEL_GREEN$1 },
                     "data-ocid": `featured_work.item.${i + 1}`,
-                    children: /* @__PURE__ */ jsxRuntimeExports.jsx(ProjectCard, { project })
+                    children: /* @__PURE__ */ jsxRuntimeExports.jsx(ProjectCard, { project, index: i })
                   },
                   project.id
                 ))
@@ -43949,7 +46110,7 @@ function AboutSection() {
     {
       id: "about",
       className: "py-24 px-6 md:px-16",
-      style: { background: LIGHT_ORANGE, color: "#0a0a0a" },
+      style: { background: LIGHT_ORANGE$1, color: "#0a0a0a" },
       "data-ocid": "about.section",
       children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
         motion.div,
@@ -43957,88 +46118,114 @@ function AboutSection() {
           initial: "hidden",
           whileInView: "visible",
           viewport: { once: true, margin: "-80px" },
-          variants: stagger,
+          variants: stagger$1,
           className: "flex flex-col gap-12",
           children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsxs(motion.div, { variants: fadeUp, className: "flex flex-col gap-4", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs(motion.div, { variants: fadeUp$1, className: "flex flex-col gap-4", children: [
               /* @__PURE__ */ jsxRuntimeExports.jsx(SectionLabel, { children: "About" }),
               /* @__PURE__ */ jsxRuntimeExports.jsx("hr", { style: { borderColor: "rgba(0,0,0,0.1)" } })
             ] }),
             /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-20", children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsxs(motion.div, { variants: fadeUp, className: "flex flex-col gap-6", children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx("blockquote", { className: "font-display text-2xl md:text-4xl font-bold leading-tight tracking-tight text-black", children: '"Design and code are only tools of expression. What sets us and our work apart is people."' }),
-                /* @__PURE__ */ jsxRuntimeExports.jsxs(
-                  "div",
-                  {
-                    className: "flex gap-10 pt-5 border-t",
-                    style: { borderColor: "rgba(0,0,0,0.1)" },
-                    children: [
-                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx(
-                          "p",
-                          {
-                            className: "font-body text-xs tracking-widest uppercase mb-1",
-                            style: { color: "rgba(0,0,0,0.4)" },
-                            children: "Founded"
-                          }
-                        ),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx(
-                          "p",
-                          {
-                            className: "font-display font-bold text-2xl",
-                            style: { color: ORANGE },
-                            children: "2008"
-                          }
-                        )
-                      ] }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx(
-                          "p",
-                          {
-                            className: "font-body text-xs tracking-widest uppercase mb-1",
-                            style: { color: "rgba(0,0,0,0.4)" },
-                            children: "Based In"
-                          }
-                        ),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx(
-                          "p",
-                          {
-                            className: "font-display font-bold text-2xl",
-                            style: { color: ORANGE },
-                            children: "Pune, India"
-                          }
-                        )
-                      ] })
-                    ]
-                  }
-                )
-              ] }),
-              /* @__PURE__ */ jsxRuntimeExports.jsxs(motion.div, { variants: fadeUp, className: "flex flex-col gap-4", children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx(
-                  "p",
-                  {
-                    className: "font-body text-base md:text-lg leading-relaxed",
-                    style: { color: "rgba(0,0,0,0.65)" },
-                    children: "We're a small group of creative thinkers who craft bespoke digital-first media experiences. We manage and catalog large-scale media archives stored on IBM LTO tapes, making them searchable, accessible, and beautifully organized for our clients."
-                  }
-                ),
-                /* @__PURE__ */ jsxRuntimeExports.jsx(
-                  "p",
-                  {
-                    className: "font-body text-base leading-relaxed",
-                    style: { color: "rgba(0,0,0,0.52)" },
-                    children: "Our hardware fleet includes Symply PRO and MagStar tape writers — each asset cataloged with full provenance: Tape ID, LTO generation, hardware used, tape position, and date written."
-                  }
-                ),
-                /* @__PURE__ */ jsxRuntimeExports.jsx(
-                  "p",
-                  {
-                    className: "font-body text-base leading-relaxed",
-                    style: { color: "rgba(0,0,0,0.52)" },
-                    children: "Web Emerging Technologies Pvt Ltd is headquartered in Pune, India, serving media houses, production studios, and archival institutions across the region."
-                  }
-                )
-              ] })
+              /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                motion.div,
+                {
+                  initial: { opacity: 0, y: 60 },
+                  whileInView: { opacity: 1, y: 0 },
+                  viewport: { once: true, margin: "-100px" },
+                  transition: { duration: 0.9, delay: 0 },
+                  className: "flex flex-col gap-6",
+                  children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "overflow-hidden relative", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                      motion.blockquote,
+                      {
+                        initial: { clipPath: "inset(0 100% 0 0)" },
+                        whileInView: { clipPath: "inset(0 0% 0 0)" },
+                        viewport: { once: true, margin: "-80px" },
+                        transition: { duration: 1.1, ease: [0.77, 0, 0.175, 1] },
+                        className: "font-display text-2xl md:text-4xl font-bold leading-tight tracking-tight text-black",
+                        children: '"WeVirtual.cloud is a next-generation media asset management platform developed by Web Emerging Technologies Pvt Ltd."'
+                      }
+                    ) }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                      motion.div,
+                      {
+                        initial: { opacity: 0, y: 30 },
+                        whileInView: { opacity: 1, y: 0 },
+                        viewport: { once: true, margin: "-80px" },
+                        transition: { duration: 0.7, delay: 0.15 },
+                        className: "flex gap-10 pt-5 border-t",
+                        style: { borderColor: "rgba(0,0,0,0.1)" },
+                        children: [
+                          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+                            /* @__PURE__ */ jsxRuntimeExports.jsx(
+                              "p",
+                              {
+                                className: "font-body text-xs tracking-widest uppercase mb-1",
+                                style: { color: "#3d3d3d" },
+                                children: "Founded"
+                              }
+                            ),
+                            /* @__PURE__ */ jsxRuntimeExports.jsx(
+                              "p",
+                              {
+                                className: "font-display font-bold text-2xl",
+                                style: { color: ORANGE$1 },
+                                children: "2008"
+                              }
+                            )
+                          ] }),
+                          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+                            /* @__PURE__ */ jsxRuntimeExports.jsx(
+                              "p",
+                              {
+                                className: "font-body text-xs tracking-widest uppercase mb-1",
+                                style: { color: "#3d3d3d" },
+                                children: "Based In"
+                              }
+                            ),
+                            /* @__PURE__ */ jsxRuntimeExports.jsx(
+                              "p",
+                              {
+                                className: "font-display font-bold text-2xl",
+                                style: { color: ORANGE$1 },
+                                children: "Pune, India"
+                              }
+                            )
+                          ] })
+                        ]
+                      }
+                    )
+                  ]
+                }
+              ),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                motion.div,
+                {
+                  initial: { opacity: 0, y: 60 },
+                  whileInView: { opacity: 1, y: 0 },
+                  viewport: { once: true, margin: "-100px" },
+                  transition: { duration: 0.9, delay: 0.15 },
+                  className: "flex flex-col gap-6",
+                  children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(
+                      "p",
+                      {
+                        className: "font-body text-base md:text-lg leading-relaxed",
+                        style: { color: "#2d2d2d" },
+                        children: "Our hardware fleet includes Symply PRO and MagStar tape writers — each asset cataloged with full provenance: Tape ID, LTO generation, hardware used, tape position, and date written. By combining powerful software with reliable LTO storage technology, we eliminate the risks of data loss, high cloud costs, and inefficient asset management."
+                      }
+                    ),
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(
+                      "p",
+                      {
+                        className: "font-body text-base leading-relaxed",
+                        style: { color: "#3d3d3d" },
+                        children: "We empower marketing teams, production houses, and enterprises to take full control of their media libraries."
+                      }
+                    )
+                  ]
+                }
+              )
             ] })
           ]
         }
@@ -44074,7 +46261,7 @@ function ServicesSection() {
     {
       className: "text-black py-24 px-6 md:px-16",
       style: {
-        background: LIGHT_ORANGE_ALT,
+        background: PASTEL_GREEN$1,
         borderTop: "1px solid rgba(0,0,0,0.08)"
       },
       "data-ocid": "services.section",
@@ -44084,229 +46271,347 @@ function ServicesSection() {
           initial: "hidden",
           whileInView: "visible",
           viewport: { once: true, margin: "-80px" },
-          variants: stagger,
+          variants: stagger$1,
           className: "flex flex-col gap-12",
           children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsxs(motion.div, { variants: fadeUp, className: "flex flex-col gap-5", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs(motion.div, { variants: fadeUp$1, className: "flex flex-col gap-5", children: [
               /* @__PURE__ */ jsxRuntimeExports.jsx(SectionLabel, { children: "Services" }),
               /* @__PURE__ */ jsxRuntimeExports.jsx("hr", { style: { borderColor: "rgba(0,0,0,0.1)" } }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "font-display text-3xl md:text-5xl font-bold text-black max-w-3xl leading-tight tracking-tight", children: "From acquisition to retrieval, we're the ultimate media management partner." })
+              /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "overflow-hidden relative", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                motion.h2,
+                {
+                  initial: { clipPath: "inset(0 100% 0 0)" },
+                  whileInView: { clipPath: "inset(0 0% 0 0)" },
+                  viewport: { once: true, margin: "-60px" },
+                  transition: { duration: 1.1, ease: [0.77, 0, 0.175, 1] },
+                  className: "font-display text-3xl md:text-5xl font-bold text-black max-w-3xl leading-tight tracking-tight",
+                  children: "From acquisition to retrieval, we're the ultimate media management partner."
+                }
+              ) })
             ] }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx(
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "grid grid-cols-1 md:grid-cols-2 gap-6", children: SERVICES.map((svc, i) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
               motion.div,
               {
-                variants: stagger,
-                className: "grid grid-cols-1 md:grid-cols-2 gap-px",
-                style: { background: "rgba(0,0,0,0.08)" },
-                children: SERVICES.map((svc, i) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
-                  motion.div,
-                  {
-                    variants: fadeUp,
-                    className: "p-8 md:p-10 flex flex-col gap-4 border-b border-black/10 last:border-b-0",
-                    style: { background: LIGHT_ORANGE_ALT },
-                    "data-ocid": `services.item.${i + 1}`,
-                    children: [
-                      /* @__PURE__ */ jsxRuntimeExports.jsx(
-                        "span",
-                        {
-                          className: "font-display text-5xl font-bold leading-none",
-                          style: { color: ORANGE },
-                          children: svc.num
-                        }
-                      ),
-                      /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { className: "font-display text-xl font-bold text-black", children: svc.title }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsx(
-                        "p",
-                        {
-                          className: "font-body text-sm leading-relaxed",
-                          style: { color: "rgba(0,0,0,0.52)" },
-                          children: svc.desc
-                        }
-                      )
-                    ]
-                  },
-                  svc.num
-                ))
-              }
-            )
+                initial: "hidden",
+                whileInView: "visible",
+                viewport: { once: true, margin: "-60px" },
+                variants: serviceCardReveal(i),
+                whileHover: {
+                  y: -6,
+                  scale: 1.02,
+                  boxShadow: "0 20px 40px rgba(0,0,0,0.10)",
+                  transition: { type: "spring", stiffness: 300, damping: 22 }
+                },
+                className: "group flex flex-col gap-4 rounded-xl p-8 md:p-10 border transition-all duration-300 cursor-default",
+                style: {
+                  background: PASTEL_GREEN_CARD$1,
+                  borderColor: "rgba(0,0,0,0.1)"
+                },
+                onMouseEnter: (e) => {
+                  e.currentTarget.style.background = PASTEL_GREEN_HOVER$1;
+                  e.currentTarget.style.borderColor = "rgba(0,0,0,0.2)";
+                },
+                onMouseLeave: (e) => {
+                  e.currentTarget.style.background = PASTEL_GREEN_CARD$1;
+                  e.currentTarget.style.borderColor = "rgba(0,0,0,0.1)";
+                },
+                "data-ocid": `services.item.${i + 1}`,
+                children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    "span",
+                    {
+                      className: "font-display text-5xl font-bold leading-none",
+                      style: { color: ORANGE$1 },
+                      children: svc.num
+                    }
+                  ),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { className: "font-display text-xl font-bold text-black transition-transform duration-300 group-hover:scale-105 origin-left", children: svc.title }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    "p",
+                    {
+                      className: "font-body text-sm leading-relaxed",
+                      style: { color: "#3d3d3d" },
+                      children: svc.desc
+                    }
+                  )
+                ]
+              },
+              svc.num
+            )) })
           ]
         }
       )
     }
   );
 }
-function ArticlesSection() {
+function BlogSection() {
+  const recentPosts = getAutoPopulatedBlogs(2);
+  const CATEGORY_COLORS2 = {
+    "LTO History": "#e05c00",
+    "LTO Technology": "#2e7d52",
+    "HDD News": "#1a5f8a",
+    "SSD News": "#6b3fa0",
+    "Storage Trends": "#a05c00"
+  };
   return /* @__PURE__ */ jsxRuntimeExports.jsx(
     "section",
     {
-      id: "articles",
+      id: "blog",
       className: "py-24 px-6 md:px-16",
-      style: { background: LIGHT_ORANGE, color: "#0a0a0a" },
-      "data-ocid": "articles.section",
+      style: { background: LIGHT_ORANGE$1, color: "#0a0a0a" },
+      "data-ocid": "blog.section",
       children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
         motion.div,
         {
           initial: "hidden",
           whileInView: "visible",
           viewport: { once: true, margin: "-80px" },
-          variants: stagger,
+          variants: stagger$1,
           className: "flex flex-col gap-10",
           children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsxs(motion.div, { variants: fadeUp, className: "flex flex-col gap-4", children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx(SectionLabel, { children: "Articles" }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx("hr", { style: { borderColor: "rgba(0,0,0,0.1)" } }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "font-display text-4xl md:text-6xl font-bold leading-tight tracking-tight text-black", children: "Latest Thinking" })
-            ] }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx(
+            /* @__PURE__ */ jsxRuntimeExports.jsxs(
               motion.div,
               {
-                variants: stagger,
-                className: "grid grid-cols-1 md:grid-cols-2 gap-8",
-                children: ARTICLES.map((article, i) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
-                  motion.article,
-                  {
-                    variants: fadeUp,
-                    className: "flex flex-col gap-3 pt-5 border-t",
-                    style: { borderColor: "rgba(0,0,0,0.15)" },
-                    "data-ocid": `articles.item.${i + 1}`,
-                    children: [
-                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-4 flex-wrap", children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx(
-                          "span",
-                          {
-                            className: "font-body text-xs uppercase tracking-widest",
-                            style: { color: "rgba(0,0,0,0.38)" },
-                            children: article.date
-                          }
-                        ),
-                        /* @__PURE__ */ jsxRuntimeExports.jsxs(
-                          "span",
-                          {
-                            className: "font-body text-xs",
-                            style: { color: "rgba(0,0,0,0.28)" },
-                            children: [
-                              "by ",
-                              article.author
-                            ]
-                          }
-                        )
-                      ] }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { className: "font-display text-xl md:text-2xl font-bold leading-tight text-black", children: article.title }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsx(
-                        "p",
-                        {
-                          className: "font-body text-sm leading-relaxed line-clamp-3",
-                          style: { color: "rgba(0,0,0,0.55)" },
-                          children: article.excerpt
-                        }
-                      ),
-                      /* @__PURE__ */ jsxRuntimeExports.jsxs(
-                        Link,
-                        {
-                          to: "/articles/$id",
-                          params: { id: article.id },
-                          className: "inline-flex items-center gap-2 text-sm font-body font-medium hover:gap-3 transition-all duration-300 mt-1",
-                          style: { color: "rgba(0,0,0,0.6)" },
-                          "data-ocid": `articles.read_more_link.${i + 1}`,
-                          children: [
-                            "Read more ",
-                            /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowRight, { size: 13 })
-                          ]
-                        }
-                      )
-                    ]
-                  },
-                  article.id
-                ))
+                variants: fadeUp$1,
+                className: "flex flex-col md:flex-row md:items-end justify-between gap-6",
+                children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-4", children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(SectionLabel, { children: "Blog" }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("hr", { style: { borderColor: "rgba(0,0,0,0.1)" } }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "overflow-hidden relative", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                      motion.h2,
+                      {
+                        initial: { clipPath: "inset(0 100% 0 0)" },
+                        whileInView: { clipPath: "inset(0 0% 0 0)" },
+                        viewport: { once: true, margin: "-60px" },
+                        transition: { duration: 1.1, ease: [0.77, 0, 0.175, 1] },
+                        className: "font-display text-4xl md:text-6xl font-bold leading-tight tracking-tight text-black",
+                        children: "Latest from the Archive"
+                      }
+                    ) })
+                  ] }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                    Link,
+                    {
+                      to: "/blog",
+                      className: "shrink-0 inline-flex items-center gap-2 text-sm font-body font-semibold transition-all duration-300 hover:gap-3",
+                      style: { color: ORANGE$1 },
+                      "data-ocid": "blog.view_all_link",
+                      children: [
+                        "View all posts ",
+                        /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowRight, { size: 14 })
+                      ]
+                    }
+                  )
+                ]
               }
-            )
-          ]
-        }
-      )
-    }
-  );
-}
-function CultureSection() {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
-    "section",
-    {
-      className: "text-black py-24 px-6 md:px-16",
-      style: {
-        background: LIGHT_ORANGE_ALT,
-        borderTop: "1px solid rgba(0,0,0,0.08)"
-      },
-      "data-ocid": "culture.section",
-      children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
-        motion.div,
-        {
-          initial: "hidden",
-          whileInView: "visible",
-          viewport: { once: true, margin: "-80px" },
-          variants: stagger,
-          className: "flex flex-col gap-10",
-          children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsxs(motion.div, { variants: fadeUp, className: "flex flex-col gap-4", children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx(SectionLabel, { children: "Culture" }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx("hr", { style: { borderColor: "rgba(0,0,0,0.1)" } }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "font-display text-4xl md:text-6xl font-bold leading-tight tracking-tight text-black", children: "Our World" })
-            ] }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx(
-              motion.div,
-              {
-                variants: stagger,
-                className: "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px",
-                style: { background: "rgba(0,0,0,0.08)" },
-                children: CULTURE_TRIPS.map((trip, i) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
-                  motion.div,
-                  {
-                    variants: fadeUp,
-                    className: "p-8 relative overflow-hidden flex flex-col gap-3 transition-smooth",
-                    style: { background: LIGHT_ORANGE_ALT },
-                    onMouseEnter: (e) => {
-                      e.currentTarget.style.background = "#fde4b0";
-                    },
-                    onMouseLeave: (e) => {
-                      e.currentTarget.style.background = LIGHT_ORANGE_ALT;
-                    },
-                    "data-ocid": `culture.item.${i + 1}`,
-                    children: [
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "grid grid-cols-1 md:grid-cols-2 gap-8", children: recentPosts.map((article, i) => {
+              const catColor = CATEGORY_COLORS2[article.category] ?? ORANGE$1;
+              return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                motion.article,
+                {
+                  initial: "hidden",
+                  whileInView: "visible",
+                  viewport: { once: true, margin: "-60px" },
+                  variants: blogCardReveal(i),
+                  className: "flex flex-col gap-4 pt-6 border-t",
+                  style: { borderColor: "rgba(0,0,0,0.15)" },
+                  "data-ocid": `blog.featured.item.${i + 1}`,
+                  children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-3 flex-wrap", children: [
                       /* @__PURE__ */ jsxRuntimeExports.jsx(
                         "span",
                         {
-                          className: "absolute -bottom-3 -right-1 font-display font-bold select-none pointer-events-none",
-                          style: {
-                            fontSize: "7rem",
-                            lineHeight: 1,
-                            opacity: 0.07,
-                            color: "#111111"
-                          },
-                          "aria-hidden": "true",
-                          children: trip.year
+                          className: "text-[10px] font-body font-semibold uppercase tracking-widest px-2.5 py-0.5 rounded-full text-white",
+                          style: { background: catColor },
+                          children: article.category
                         }
                       ),
                       /* @__PURE__ */ jsxRuntimeExports.jsx(
                         "span",
                         {
                           className: "font-body text-xs uppercase tracking-widest",
-                          style: { color: "rgba(0,0,0,0.32)" },
-                          children: trip.year
+                          style: { color: "#555555" },
+                          children: article.date
                         }
                       ),
-                      /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { className: "font-display text-2xl font-bold text-black", children: trip.location }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsx(
-                        "p",
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                        "span",
                         {
-                          className: "font-body text-sm leading-relaxed relative z-10",
-                          style: { color: "rgba(0,0,0,0.52)" },
-                          children: trip.description
+                          className: "font-body text-xs",
+                          style: { color: "#555555" },
+                          children: [
+                            "by ",
+                            article.author
+                          ]
                         }
                       )
-                    ]
-                  },
-                  trip.id
-                ))
+                    ] }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(
+                      "h3",
+                      {
+                        className: "font-display font-bold leading-tight text-black transition-all duration-300 hover:opacity-70 cursor-pointer",
+                        style: { fontSize: "clamp(1.3rem, 2.5vw, 1.75rem)" },
+                        children: /* @__PURE__ */ jsxRuntimeExports.jsx(Link, { to: "/articles/$id", params: { id: article.id }, children: article.title })
+                      }
+                    ),
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(
+                      "p",
+                      {
+                        className: "font-body text-sm leading-relaxed line-clamp-3",
+                        style: { color: "#2d2d2d" },
+                        children: article.excerpt
+                      }
+                    ),
+                    /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                      Link,
+                      {
+                        to: "/articles/$id",
+                        params: { id: article.id },
+                        className: "inline-flex items-center gap-2 text-sm font-body font-medium hover:gap-3 transition-all duration-300 mt-1",
+                        style: { color: ORANGE$1 },
+                        "data-ocid": `blog.read_more_link.${i + 1}`,
+                        children: [
+                          "Read more ",
+                          /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowRight, { size: 13 })
+                        ]
+                      }
+                    )
+                  ]
+                },
+                article.id
+              );
+            }) })
+          ]
+        }
+      )
+    }
+  );
+}
+const WORLD_BOXES = CULTURE_TRIPS.map((t) => t.id);
+function WorldSection() {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    "section",
+    {
+      id: "culture",
+      className: "text-black py-24 px-6 md:px-16",
+      style: {
+        background: PASTEL_GREEN$1,
+        borderTop: "1px solid rgba(0,0,0,0.08)"
+      },
+      "data-ocid": "world.section",
+      children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        motion.div,
+        {
+          initial: "hidden",
+          whileInView: "visible",
+          viewport: { once: true, margin: "-80px" },
+          variants: stagger$1,
+          className: "flex flex-col gap-10",
+          children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs(motion.div, { variants: fadeUp$1, className: "flex flex-col gap-4", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(SectionLabel, { children: "World" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("hr", { style: { borderColor: "rgba(0,0,0,0.1)" } }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "overflow-hidden relative", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                motion.h2,
+                {
+                  initial: { clipPath: "inset(0 100% 0 0)" },
+                  whileInView: { clipPath: "inset(0 0% 0 0)" },
+                  viewport: { once: true, margin: "-60px" },
+                  transition: { duration: 1.1, ease: [0.77, 0, 0.175, 1] },
+                  className: "font-display text-4xl md:text-6xl font-bold leading-tight tracking-tight text-black",
+                  children: "Our World"
+                }
+              ) })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              motion.div,
+              {
+                initial: { opacity: 0, scale: 0.9 },
+                whileInView: { opacity: 1, scale: 1 },
+                viewport: { once: true, margin: "-80px" },
+                transition: { duration: 0.85, ease: [0.16, 1, 0.3, 1] },
+                className: "relative w-full rounded-xl overflow-hidden border flex items-center justify-center",
+                style: {
+                  background: PASTEL_GREEN_CARD$1,
+                  borderColor: "rgba(0,0,0,0.1)",
+                  minHeight: "340px"
+                },
+                "data-ocid": "world.video_placeholder",
+                children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col items-center gap-5 py-16 px-8 text-center", children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    "div",
+                    {
+                      className: "w-20 h-20 rounded-full border-2 flex items-center justify-center",
+                      style: { borderColor: ORANGE$1 },
+                      children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                        "svg",
+                        {
+                          width: "28",
+                          height: "28",
+                          viewBox: "0 0 24 24",
+                          fill: "none",
+                          "aria-hidden": "true",
+                          children: /* @__PURE__ */ jsxRuntimeExports.jsx("polygon", { points: "6,4 20,12 6,20", fill: ORANGE$1 })
+                        }
+                      )
+                    }
+                  ),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-display text-2xl md:text-3xl font-bold text-black", children: "Video Coming Soon" }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    "p",
+                    {
+                      className: "font-body text-sm max-w-sm leading-relaxed",
+                      style: { color: "#3d3d3d" },
+                      children: "We're preparing an exclusive look into Our World at WeVirtual. Check back soon."
+                    }
+                  )
+                ] })
               }
-            )
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5", children: WORLD_BOXES.map((id2, i) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+              motion.div,
+              {
+                initial: { opacity: 0, scale: 0.9 },
+                whileInView: { opacity: 1, scale: 1 },
+                viewport: { once: true, margin: "-80px" },
+                transition: {
+                  duration: 0.75,
+                  delay: i * 0.1,
+                  ease: [0.16, 1, 0.3, 1]
+                },
+                whileHover: {
+                  scale: 1.04,
+                  boxShadow: "0 16px 40px rgba(0,0,0,0.10)",
+                  transition: { type: "spring", stiffness: 280, damping: 22 }
+                },
+                className: "group relative overflow-hidden flex flex-col items-center justify-center gap-3 rounded-xl p-10 border cursor-default",
+                style: {
+                  background: PASTEL_GREEN_CARD$1,
+                  borderColor: "rgba(0,0,0,0.1)",
+                  minHeight: "160px"
+                },
+                onMouseEnter: (e) => {
+                  e.currentTarget.style.background = PASTEL_GREEN_HOVER$1;
+                  e.currentTarget.style.borderColor = "rgba(0,0,0,0.2)";
+                },
+                onMouseLeave: (e) => {
+                  e.currentTarget.style.background = PASTEL_GREEN_CARD$1;
+                  e.currentTarget.style.borderColor = "rgba(0,0,0,0.1)";
+                },
+                "data-ocid": `world.item.${i + 1}`,
+                children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  "h3",
+                  {
+                    className: "font-display text-xl font-bold text-black transition-transform duration-300 group-hover:scale-110 origin-center text-center",
+                    style: { color: "#2d2d2d" },
+                    children: "Coming Soon"
+                  }
+                )
+              },
+              id2
+            )) })
           ]
         }
       )
@@ -44317,71 +46622,229 @@ function StoreSection() {
   return /* @__PURE__ */ jsxRuntimeExports.jsx(
     "section",
     {
-      id: "store",
+      id: "clients",
       className: "py-24 px-6 md:px-16",
-      style: { background: LIGHT_ORANGE, color: "#0a0a0a" },
-      "data-ocid": "store.section",
+      style: { background: LIGHT_ORANGE$1, color: "#0a0a0a" },
+      "data-ocid": "clients.section",
       children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
         motion.div,
         {
           initial: "hidden",
           whileInView: "visible",
           viewport: { once: true, margin: "-80px" },
-          variants: stagger,
+          variants: stagger$1,
           className: "flex flex-col gap-10",
           children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsxs(motion.div, { variants: fadeUp, className: "flex flex-col gap-4", children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx(SectionLabel, { children: "Store" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs(motion.div, { variants: fadeUp$1, className: "flex flex-col gap-4", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(SectionLabel, { children: "Clients" }),
               /* @__PURE__ */ jsxRuntimeExports.jsx("hr", { style: { borderColor: "rgba(0,0,0,0.1)" } }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "font-display text-4xl md:text-6xl font-bold leading-tight tracking-tight text-black", children: "WeVirtual Merchandise" })
+              /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "overflow-hidden relative", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                motion.h2,
+                {
+                  initial: { clipPath: "inset(0 100% 0 0)" },
+                  whileInView: { clipPath: "inset(0 0% 0 0)" },
+                  viewport: { once: true, margin: "-60px" },
+                  transition: { duration: 1.1, ease: [0.77, 0, 0.175, 1] },
+                  className: "font-display text-4xl md:text-6xl font-bold leading-tight tracking-tight text-black",
+                  children: "WeVirtual Clients"
+                }
+              ) })
             ] }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx(
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5", children: STORE_ITEMS.map((item, i) => /* @__PURE__ */ jsxRuntimeExports.jsx(
               motion.div,
               {
-                variants: stagger,
-                className: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-px",
-                style: { background: "rgba(0,0,0,0.08)" },
-                children: STORE_ITEMS.map((item, i) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
-                  motion.div,
-                  {
-                    variants: fadeUp,
-                    className: "flex flex-col gap-3 p-6",
-                    style: { background: LIGHT_ORANGE },
-                    "data-ocid": `store.item.${i + 1}`,
-                    children: [
-                      /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { className: "font-display text-lg font-bold leading-tight text-black", children: item.name }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsxs(
-                        "p",
-                        {
-                          className: "font-body font-bold text-2xl",
-                          style: { color: ORANGE },
-                          children: [
-                            "$",
-                            item.price
-                          ]
-                        }
-                      ),
-                      /* @__PURE__ */ jsxRuntimeExports.jsx(
-                        "p",
-                        {
-                          className: "font-body text-sm leading-relaxed",
-                          style: { color: "rgba(0,0,0,0.52)" },
-                          children: item.description
-                        }
-                      ),
-                      /* @__PURE__ */ jsxRuntimeExports.jsx(
-                        "button",
-                        {
-                          type: "button",
-                          className: "mt-auto w-full py-2.5 text-sm font-body font-semibold uppercase tracking-widest transition-smooth border border-black/60 text-black hover:bg-black hover:text-white",
-                          "data-ocid": `store.shop_button.${i + 1}`,
-                          children: "Shop Now"
-                        }
-                      )
-                    ]
-                  },
-                  item.id
-                ))
+                initial: { opacity: 0, scale: 0.9 },
+                whileInView: { opacity: 1, scale: 1 },
+                viewport: { once: true, margin: "-80px" },
+                transition: {
+                  duration: 0.75,
+                  delay: i * 0.1,
+                  ease: [0.16, 1, 0.3, 1]
+                },
+                whileHover: {
+                  scale: 1.04,
+                  boxShadow: "0 16px 40px rgba(0,0,0,0.10)",
+                  transition: { type: "spring", stiffness: 280, damping: 22 }
+                },
+                className: "group flex items-center justify-center rounded-xl border",
+                style: {
+                  background: PASTEL_GREEN_CARD$1,
+                  borderColor: "rgba(0,0,0,0.1)",
+                  minHeight: "160px"
+                },
+                onMouseEnter: (e) => {
+                  e.currentTarget.style.background = PASTEL_GREEN_HOVER$1;
+                  e.currentTarget.style.borderColor = "rgba(0,0,0,0.2)";
+                },
+                onMouseLeave: (e) => {
+                  e.currentTarget.style.background = PASTEL_GREEN_CARD$1;
+                  e.currentTarget.style.borderColor = "rgba(0,0,0,0.1)";
+                },
+                "data-ocid": `clients.item.${i + 1}`,
+                children: item.name === "Hindustan Unilever" ? /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col items-center justify-center gap-2 p-8 text-center", children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    "span",
+                    {
+                      className: "font-display font-black text-2xl md:text-3xl leading-tight tracking-tight transition-transform duration-300 group-hover:scale-105 origin-center",
+                      style: { color: "#003087" },
+                      children: "Hindustan"
+                    }
+                  ),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    "span",
+                    {
+                      className: "font-display font-black text-2xl md:text-3xl leading-tight tracking-tight transition-transform duration-300 group-hover:scale-105 origin-center",
+                      style: { color: "#003087" },
+                      children: "Unilever"
+                    }
+                  ),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    "span",
+                    {
+                      className: "font-body text-xs uppercase tracking-widest mt-1",
+                      style: { color: "#003087" },
+                      children: "Client"
+                    }
+                  )
+                ] }) : null
+              },
+              item.id
+            )) })
+          ]
+        }
+      )
+    }
+  );
+}
+function ContactSection() {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    "section",
+    {
+      id: "contact",
+      className: "py-24 px-6 md:px-16",
+      style: {
+        background: LIGHT_ORANGE$1,
+        borderTop: "1px solid rgba(0,0,0,0.08)",
+        color: "#0a0a0a"
+      },
+      "data-ocid": "contact.section",
+      children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        motion.div,
+        {
+          initial: "hidden",
+          whileInView: "visible",
+          viewport: { once: true, margin: "-80px" },
+          variants: stagger$1,
+          className: "flex flex-col gap-10",
+          children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs(motion.div, { variants: fadeUp$1, className: "flex flex-col gap-4", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(SectionLabel, { children: "Get in touch" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("hr", { style: { borderColor: "rgba(0,0,0,0.1)" } }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "font-display text-4xl md:text-6xl font-bold leading-tight tracking-tight text-black", children: "Contact Us" })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs(
+              motion.div,
+              {
+                variants: stagger$1,
+                className: "grid grid-cols-1 md:grid-cols-2 gap-8",
+                children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                    motion.div,
+                    {
+                      variants: fadeUp$1,
+                      className: "flex flex-col gap-5 rounded-xl border p-8 transition-all duration-300 hover:shadow-lg",
+                      style: {
+                        background: PASTEL_GREEN_CARD$1,
+                        borderColor: "rgba(0,0,0,0.1)"
+                      },
+                      "data-ocid": "contact.address_card",
+                      children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-1", children: [
+                          /* @__PURE__ */ jsxRuntimeExports.jsx(
+                            "span",
+                            {
+                              className: "font-body text-xs uppercase tracking-widest",
+                              style: { color: "#555555" },
+                              children: "Office Address"
+                            }
+                          ),
+                          /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { className: "font-display text-xl font-bold text-black mt-1", children: "Web Emerging Technologies Pvt Ltd" })
+                        ] }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                          "p",
+                          {
+                            className: "font-body text-sm leading-relaxed",
+                            style: { color: "rgba(0,0,0,0.6)" },
+                            children: [
+                              "SR/NO - 44/3 ahead of Rims School,",
+                              /* @__PURE__ */ jsxRuntimeExports.jsx("br", {}),
+                              "Wadachiwadi Road, Undri,",
+                              /* @__PURE__ */ jsxRuntimeExports.jsx("br", {}),
+                              "Pune 411060, India"
+                            ]
+                          }
+                        )
+                      ]
+                    }
+                  ),
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                    motion.div,
+                    {
+                      variants: fadeUp$1,
+                      className: "flex flex-col gap-5 rounded-xl border p-8 transition-all duration-300 hover:shadow-lg",
+                      style: {
+                        background: PASTEL_GREEN_CARD$1,
+                        borderColor: "rgba(0,0,0,0.1)"
+                      },
+                      "data-ocid": "contact.person_card",
+                      children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-1", children: [
+                          /* @__PURE__ */ jsxRuntimeExports.jsx(
+                            "span",
+                            {
+                              className: "font-body text-xs uppercase tracking-widest",
+                              style: { color: "#555555" },
+                              children: "Contact Person"
+                            }
+                          ),
+                          /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { className: "font-display text-xl font-bold text-black mt-1", children: "Sharad Deshmukh" })
+                        ] }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-2", children: [
+                          /* @__PURE__ */ jsxRuntimeExports.jsx(
+                            "a",
+                            {
+                              href: "tel:9823312123",
+                              className: "font-body text-sm transition-smooth hover:opacity-60",
+                              style: { color: ORANGE$1 },
+                              "data-ocid": "contact.phone_1",
+                              children: "+91 98233 12123"
+                            }
+                          ),
+                          /* @__PURE__ */ jsxRuntimeExports.jsx(
+                            "a",
+                            {
+                              href: "tel:9769295026",
+                              className: "font-body text-sm transition-smooth hover:opacity-60",
+                              style: { color: ORANGE$1 },
+                              "data-ocid": "contact.phone_2",
+                              children: "+91 97692 95026"
+                            }
+                          ),
+                          /* @__PURE__ */ jsxRuntimeExports.jsx(
+                            "a",
+                            {
+                              href: "mailto:sharad@wevirtual.cloud",
+                              className: "font-body text-sm transition-smooth hover:opacity-60 mt-1",
+                              style: { color: ORANGE$1 },
+                              "data-ocid": "contact.email",
+                              children: "sharad@wevirtual.cloud"
+                            }
+                          )
+                        ] })
+                      ]
+                    }
+                  )
+                ]
               }
             )
           ]
@@ -44396,40 +46859,57 @@ function FooterCTASection() {
     {
       className: "text-black py-28 px-6 md:px-16",
       style: {
-        background: LIGHT_ORANGE_ALT,
+        background: PASTEL_GREEN$1,
         borderTop: "1px solid rgba(0,0,0,0.08)"
       },
       "data-ocid": "footer_cta.section",
       children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
         motion.div,
         {
-          initial: "hidden",
-          whileInView: "visible",
-          viewport: { once: true, margin: "-80px" },
-          variants: stagger,
+          initial: { opacity: 0, scale: 0.92, y: 40 },
+          whileInView: { opacity: 1, scale: 1, y: 0 },
+          viewport: { once: true, margin: "-60px" },
+          transition: { duration: 1.1, ease: [0.16, 1, 0.3, 1] },
           className: "flex flex-col md:flex-row items-start md:items-end justify-between gap-10",
           children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx(
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "overflow-hidden relative", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
               motion.h2,
               {
-                variants: fadeUp,
+                initial: { clipPath: "inset(0 100% 0 0)" },
+                whileInView: { clipPath: "inset(0 0% 0 0)" },
+                viewport: { once: true, margin: "-60px" },
+                transition: {
+                  duration: 1.3,
+                  ease: [0.77, 0, 0.175, 1],
+                  delay: 0.15
+                },
                 className: "font-display font-bold leading-tight tracking-tight text-black",
                 style: { fontSize: "clamp(2.5rem, 8vw, 7rem)" },
                 children: "Let's work together"
               }
-            ),
-            /* @__PURE__ */ jsxRuntimeExports.jsx(motion.div, { variants: fadeUp, className: "shrink-0", children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
-              "a",
+            ) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              motion.div,
               {
-                href: "mailto:sharad@wevirtual.cloud",
-                className: "inline-flex items-center gap-3 border border-black/60 px-8 py-4 text-sm font-body font-semibold uppercase tracking-widest text-black hover:bg-black hover:text-white transition-smooth",
-                "data-ocid": "footer_cta.get_in_touch_button",
-                children: [
-                  "Get in touch ",
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowRight, { size: 14 })
-                ]
+                initial: { opacity: 0, y: 20 },
+                whileInView: { opacity: 1, y: 0 },
+                viewport: { once: true, margin: "-60px" },
+                transition: { duration: 0.7, delay: 0.4, ease: [0.16, 1, 0.3, 1] },
+                className: "shrink-0",
+                children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                  "a",
+                  {
+                    href: "mailto:sharad@wevirtual.cloud",
+                    className: "inline-flex items-center gap-3 border border-black/60 px-8 py-4 text-sm font-body font-semibold uppercase tracking-widest text-black hover:bg-black hover:text-white transition-smooth",
+                    "data-ocid": "footer_cta.get_in_touch_button",
+                    children: [
+                      "Get in touch ",
+                      /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowRight, { size: 14 })
+                    ]
+                  }
+                )
               }
-            ) })
+            )
           ]
         }
       )
@@ -44437,21 +46917,45 @@ function FooterCTASection() {
   );
 }
 function HomePage() {
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx(HeroSection, {}),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(FeaturedWorkSection, {}),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(AboutSection, {}),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(ServicesSection, {}),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(ArticlesSection, {}),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(CultureSection, {}),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(StoreSection, {}),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(FooterCTASection, {})
-  ] });
+  useCinematicScroll();
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(AnimatePresence, { mode: "wait", children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    motion.div,
+    {
+      initial: { opacity: 0 },
+      animate: { opacity: 1 },
+      transition: { duration: 0.5 },
+      children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(HeroSection, {}),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(FeaturedWorkSection, {}),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(AboutSection, {}),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(ServicesSection, {}),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(BlogSection, {}),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(WorldSection, {}),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(StoreSection, {}),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(ContactSection, {}),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(FooterCTASection, {})
+      ]
+    },
+    "home"
+  ) });
 }
+const CUSTOM_EASE$1 = [0.77, 0, 0.175, 1];
+const SPRING_CINEMATIC$1 = {
+  type: "spring",
+  stiffness: 300,
+  damping: 26
+};
 function ProjectDetailPage() {
+  useCinematicScroll();
   const { id: id2 } = useParams({ from: "/projects/$id" });
   const navigate = useNavigate();
   const { data: project, isLoading } = useProject(id2);
+  const imageRef = reactExports.useRef(null);
+  const { scrollYProgress } = useScroll({
+    target: imageRef,
+    offset: ["start end", "end start"]
+  });
+  const imageParallaxY = useTransform(scrollYProgress, [0, 1], [-60, 60]);
   if (isLoading) {
     return /* @__PURE__ */ jsxRuntimeExports.jsx(
       "div",
@@ -44485,175 +46989,38 @@ function ProjectDetailPage() {
       }
     );
   }
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "section-dark min-h-[60vh] flex flex-col justify-end px-6 md:px-16 pb-16 pt-32 relative overflow-hidden", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
-        "div",
-        {
-          className: "absolute inset-0 opacity-[0.04] pointer-events-none",
-          style: {
-            backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 39px, currentColor 39px, currentColor 40px), repeating-linear-gradient(90deg, transparent, transparent 39px, currentColor 39px, currentColor 40px)"
-          }
-        }
-      ),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
-        motion.div,
-        {
-          initial: { opacity: 0, x: -16 },
-          animate: { opacity: 1, x: 0 },
-          transition: { duration: 0.45, ease: "easeOut" },
-          className: "absolute top-8 left-6 md:left-16",
-          children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
-            "button",
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    motion.div,
+    {
+      initial: { opacity: 0 },
+      animate: { opacity: 1 },
+      transition: { duration: 0.6 },
+      children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "section-dark min-h-[60vh] flex flex-col justify-end px-6 md:px-16 pb-16 pt-32 relative overflow-hidden", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            "div",
             {
-              onClick: () => navigate({ to: "/" }),
-              type: "button",
-              className: "flex items-center gap-2 text-label text-primary-foreground/60 hover:text-primary-foreground transition-smooth",
-              "data-ocid": "project_detail.back_button",
-              "aria-label": "Back to work",
-              children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowLeft, { size: 14, strokeWidth: 2 }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Back to work" })
-              ]
-            }
-          )
-        }
-      ),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs(
-        motion.div,
-        {
-          initial: { opacity: 0, y: 16 },
-          animate: { opacity: 1, y: 0 },
-          transition: { duration: 0.5, delay: 0.1, ease: "easeOut" },
-          className: "flex flex-wrap items-center gap-4 mb-6",
-          children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx(
-              "span",
-              {
-                className: "text-label border border-primary-foreground/30 px-3 py-1 rounded-full",
-                "data-ocid": "project_detail.category_tag",
-                children: project.category
+              className: "absolute inset-0 opacity-[0.04] pointer-events-none",
+              style: {
+                backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 39px, currentColor 39px, currentColor 40px), repeating-linear-gradient(90deg, transparent, transparent 39px, currentColor 39px, currentColor 40px)"
               }
-            ),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-label text-primary-foreground/50", children: project.year }),
-            project.awardsCount > 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs(
-              "span",
-              {
-                className: "flex items-center gap-1.5 text-label text-primary-foreground/50",
-                "data-ocid": "project_detail.awards_badge",
-                children: [
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(Trophy, { size: 12, strokeWidth: 2 }),
-                  project.awardsCount,
-                  " Award",
-                  project.awardsCount !== 1 ? "s" : ""
-                ]
-              }
-            )
-          ]
-        }
-      ),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
-        motion.h1,
-        {
-          initial: { opacity: 0, y: 24 },
-          animate: { opacity: 1, y: 0 },
-          transition: { duration: 0.6, delay: 0.2, ease: "easeOut" },
-          className: "text-hero max-w-4xl leading-tight",
-          "data-ocid": "project_detail.title",
-          children: project.title
-        }
-      ),
-      project.description && /* @__PURE__ */ jsxRuntimeExports.jsx(
-        motion.p,
-        {
-          initial: { opacity: 0, y: 16 },
-          animate: { opacity: 1, y: 0 },
-          transition: { duration: 0.5, delay: 0.35, ease: "easeOut" },
-          className: "mt-6 text-lg font-body text-primary-foreground/70 max-w-2xl",
-          "data-ocid": "project_detail.description",
-          children: project.description
-        }
-      ),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
-        motion.div,
-        {
-          initial: { scaleX: 0 },
-          animate: { scaleX: 1 },
-          transition: { duration: 0.7, delay: 0.5, ease: "easeOut" },
-          className: "absolute bottom-0 left-0 right-0 h-px bg-primary-foreground/20 origin-left"
-        }
-      )
-    ] }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(
-      "section",
-      {
-        className: "section-light w-full py-20",
-        "data-ocid": "project_detail.body_section",
-        children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "max-w-4xl mx-auto px-6 md:px-16", children: [
-          project.fullDescription && /* @__PURE__ */ jsxRuntimeExports.jsxs(
-            motion.div,
-            {
-              initial: { opacity: 0, y: 20 },
-              whileInView: { opacity: 1, y: 0 },
-              viewport: { once: true },
-              transition: { duration: 0.6, ease: "easeOut" },
-              children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-label text-muted-foreground mb-4", children: "Overview" }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx(
-                  "p",
-                  {
-                    className: "text-lg md:text-xl font-body leading-relaxed text-foreground whitespace-pre-line",
-                    "data-ocid": "project_detail.full_description",
-                    children: project.fullDescription
-                  }
-                )
-              ]
-            }
-          ),
-          project.tags && project.tags.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs(
-            motion.div,
-            {
-              initial: { opacity: 0, y: 16 },
-              whileInView: { opacity: 1, y: 0 },
-              viewport: { once: true },
-              transition: { duration: 0.5, delay: 0.15, ease: "easeOut" },
-              className: "mt-16",
-              children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-label text-muted-foreground mb-4", children: "Tags" }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx(
-                  "div",
-                  {
-                    className: "flex flex-wrap gap-2",
-                    "data-ocid": "project_detail.tags_list",
-                    children: project.tags.map((tag, i) => /* @__PURE__ */ jsxRuntimeExports.jsx(
-                      "span",
-                      {
-                        className: "text-sm font-body border border-border px-3 py-1 rounded-full text-foreground hover:bg-primary hover:text-primary-foreground transition-smooth cursor-default",
-                        "data-ocid": `project_detail.tag.${i + 1}`,
-                        children: tag
-                      },
-                      tag
-                    ))
-                  }
-                )
-              ]
             }
           ),
           /* @__PURE__ */ jsxRuntimeExports.jsx(
             motion.div,
             {
-              initial: { opacity: 0 },
-              whileInView: { opacity: 1 },
-              viewport: { once: true },
-              transition: { duration: 0.5, delay: 0.2 },
-              className: "mt-20 pt-10 border-t border-border",
+              initial: { opacity: 0, x: -16 },
+              animate: { opacity: 1, x: 0 },
+              transition: { duration: 0.45, ease: "easeOut" },
+              className: "absolute top-8 left-6 md:left-16",
               children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
                 "button",
                 {
                   onClick: () => navigate({ to: "/" }),
                   type: "button",
-                  className: "flex items-center gap-2 text-label hover:opacity-60 transition-smooth",
-                  "data-ocid": "project_detail.back_link",
+                  className: "flex items-center gap-2 text-label text-[#3d3d3d] hover:text-primary-foreground transition-smooth",
+                  "data-ocid": "project_detail.back_button",
+                  "aria-label": "Back to work",
                   children: [
                     /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowLeft, { size: 14, strokeWidth: 2 }),
                     /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Back to work" })
@@ -44661,11 +47028,700 @@ function ProjectDetailPage() {
                 }
               )
             }
+          ),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            motion.div,
+            {
+              initial: { opacity: 0, y: 16 },
+              animate: { opacity: 1, y: 0 },
+              transition: { duration: 0.5, delay: 0.1, ease: "easeOut" },
+              className: "flex flex-wrap items-center gap-4 mb-6",
+              children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  motion.span,
+                  {
+                    initial: { opacity: 0, scale: 0.8 },
+                    animate: { opacity: 1, scale: 1 },
+                    transition: { ...SPRING_CINEMATIC$1, delay: 0.15 },
+                    className: "text-label border border-primary-foreground/30 px-3 py-1 rounded-full",
+                    "data-ocid": "project_detail.category_tag",
+                    children: project.category
+                  }
+                ),
+                /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  motion.span,
+                  {
+                    initial: { opacity: 0 },
+                    animate: { opacity: 1 },
+                    transition: { delay: 0.2, duration: 0.4 },
+                    className: "text-label text-[#555555]",
+                    children: project.year
+                  }
+                ),
+                project.awardsCount > 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                  motion.span,
+                  {
+                    initial: { opacity: 0, scale: 0.8 },
+                    animate: { opacity: 1, scale: 1 },
+                    transition: { ...SPRING_CINEMATIC$1, delay: 0.25 },
+                    className: "flex items-center gap-1.5 text-label text-[#555555]",
+                    "data-ocid": "project_detail.awards_badge",
+                    children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsx(Trophy, { size: 12, strokeWidth: 2 }),
+                      project.awardsCount,
+                      " Award",
+                      project.awardsCount !== 1 ? "s" : ""
+                    ]
+                  }
+                )
+              ]
+            }
+          ),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            motion.h1,
+            {
+              initial: { clipPath: "inset(0 100% 0 0)" },
+              animate: { clipPath: "inset(0 0% 0 0)" },
+              transition: { duration: 1.1, ease: CUSTOM_EASE$1, delay: 0.2 },
+              className: "text-hero max-w-4xl leading-tight",
+              "data-ocid": "project_detail.title",
+              children: project.title
+            }
+          ),
+          project.description && /* @__PURE__ */ jsxRuntimeExports.jsx(
+            motion.p,
+            {
+              initial: { opacity: 0, y: 30 },
+              animate: { opacity: 1, y: 0 },
+              transition: { delay: 0.4, duration: 0.8 },
+              className: "mt-6 text-lg font-body text-[#2d2d2d] max-w-2xl",
+              "data-ocid": "project_detail.description",
+              children: project.description
+            }
+          ),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            motion.div,
+            {
+              initial: { scaleX: 0 },
+              animate: { scaleX: 1 },
+              transition: { duration: 0.7, delay: 0.5, ease: "easeOut" },
+              className: "absolute bottom-0 left-0 right-0 h-px bg-primary-foreground/20 origin-left"
+            }
           )
-        ] })
-      }
-    )
-  ] });
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "section",
+          {
+            className: "section-light w-full py-20",
+            "data-ocid": "project_detail.body_section",
+            children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "max-w-4xl mx-auto px-6 md:px-16", children: [
+              project.imageUrl && /* @__PURE__ */ jsxRuntimeExports.jsx(
+                motion.div,
+                {
+                  ref: imageRef,
+                  initial: { opacity: 0, scale: 0.97 },
+                  whileInView: { opacity: 1, scale: 1 },
+                  viewport: { once: true, margin: "-80px" },
+                  transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] },
+                  className: "mb-12 rounded-xl overflow-hidden",
+                  style: { y: imageParallaxY },
+                  children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    "img",
+                    {
+                      src: project.imageUrl,
+                      alt: project.title,
+                      className: "w-full h-auto object-cover"
+                    }
+                  )
+                }
+              ),
+              project.fullDescription && /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                motion.div,
+                {
+                  initial: { opacity: 0, y: 20 },
+                  whileInView: { opacity: 1, y: 0 },
+                  viewport: { once: true },
+                  transition: { duration: 0.6, ease: "easeOut" },
+                  children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-label text-muted-foreground mb-4", children: "Overview" }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(
+                      "p",
+                      {
+                        className: "text-lg md:text-xl font-body leading-relaxed text-foreground whitespace-pre-line",
+                        "data-ocid": "project_detail.full_description",
+                        children: project.fullDescription
+                      }
+                    )
+                  ]
+                }
+              ),
+              project.tags && project.tags.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                motion.div,
+                {
+                  initial: { opacity: 0, y: 16 },
+                  whileInView: { opacity: 1, y: 0 },
+                  viewport: { once: true },
+                  transition: { duration: 0.5, delay: 0.15, ease: "easeOut" },
+                  className: "mt-16",
+                  children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-label text-muted-foreground mb-4", children: "Tags" }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(
+                      "div",
+                      {
+                        className: "flex flex-wrap gap-2",
+                        "data-ocid": "project_detail.tags_list",
+                        children: project.tags.map((tag, i) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+                          motion.span,
+                          {
+                            initial: { opacity: 0, scale: 0.8 },
+                            whileInView: { opacity: 1, scale: 1 },
+                            viewport: { once: true },
+                            transition: { ...SPRING_CINEMATIC$1, delay: i * 0.07 },
+                            className: "text-sm font-body border border-border px-3 py-1 rounded-full text-foreground hover:bg-primary hover:text-primary-foreground transition-smooth cursor-default",
+                            "data-ocid": `project_detail.tag.${i + 1}`,
+                            children: tag
+                          },
+                          tag
+                        ))
+                      }
+                    )
+                  ]
+                }
+              ),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                motion.div,
+                {
+                  initial: { opacity: 0 },
+                  whileInView: { opacity: 1 },
+                  viewport: { once: true },
+                  transition: { duration: 0.5, delay: 0.2 },
+                  className: "mt-20 pt-10 border-t border-border",
+                  children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                    "button",
+                    {
+                      onClick: () => navigate({ to: "/" }),
+                      type: "button",
+                      className: "flex items-center gap-2 text-label hover:opacity-60 transition-smooth",
+                      "data-ocid": "project_detail.back_link",
+                      children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowLeft, { size: 14, strokeWidth: 2 }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Back to work" })
+                      ]
+                    }
+                  )
+                }
+              )
+            ] })
+          }
+        )
+      ]
+    }
+  );
+}
+const LIGHT_ORANGE = "rgba(255,240,216,0.88)";
+const PASTEL_GREEN = "rgba(212,237,218,0.88)";
+const PASTEL_GREEN_CARD = "rgba(234,246,237,0.92)";
+const PASTEL_GREEN_HOVER = "rgba(194,229,203,0.92)";
+const ORANGE = "#e05c00";
+const CUSTOM_EASE = [0.77, 0, 0.175, 1];
+const SPRING_CINEMATIC = {
+  type: "spring",
+  stiffness: 300,
+  damping: 26
+};
+const fadeUp = {
+  hidden: { opacity: 0, y: 30 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.7, ease: "easeOut" }
+  }
+};
+const stagger = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.12 } }
+};
+const SERVICES_DETAIL = [
+  {
+    num: "01",
+    icon: HardDrive,
+    title: "Media Archiving",
+    tagline: "Long-term preservation on IBM LTO tape",
+    desc: "Long-term preservation of your media on IBM LTO tape. We manage the full ingestion pipeline — from intake to verified write confirmation. Our Symply PRO and MagStar hardware writers ensure each asset is reliably encoded to tape with dual-verify passes.",
+    features: [
+      "Full ingest pipeline management",
+      "Dual-verify write confirmation",
+      "Symply PRO & MagStar hardware",
+      "LTO-8 and LTO-9 generation support"
+    ]
+  },
+  {
+    num: "02",
+    icon: Database,
+    title: "Asset Cataloging",
+    tagline: "Structured metadata for every asset",
+    desc: "Every asset gets a structured metadata record: Tape ID, LTO generation, writer hardware (Symply PRO or MagStar), tape position, and write date. Our catalog system ensures any file can be located and retrieved in minutes, not hours.",
+    features: [
+      "Tape ID & LTO generation tagging",
+      "Hardware provenance tracking",
+      "Tape position & write date logging",
+      "Searchable metadata index"
+    ]
+  },
+  {
+    num: "03",
+    icon: Search,
+    title: "Tape Retrieval",
+    tagline: "Fast, tracked asset recovery",
+    desc: "Request specific assets for delivery. We track each retrieval order through four clear stages: Pending → In Progress → Ready → Delivered. Real-time status updates keep your team informed throughout the process.",
+    features: [
+      "Four-stage retrieval tracking",
+      "Real-time status notifications",
+      "Priority retrieval available",
+      "Partial tape reads supported"
+    ]
+  },
+  {
+    num: "04",
+    icon: Shield,
+    title: "Client Access Portal",
+    tagline: "Secure web access for your entire team",
+    desc: "Secure web access to browse, search by metadata, upload, manage projects, and monitor retrieval request status in real time. Role-based access controls let you manage permissions for your entire marketing or production team.",
+    features: [
+      "Role-based access controls",
+      "Full-text metadata search",
+      "Project and folder management",
+      "Retrieval request dashboard"
+    ]
+  }
+];
+const PROCESS_STEPS = [
+  {
+    step: "01",
+    title: "Intake",
+    desc: "Your media is received, cataloged, and queued for archiving."
+  },
+  {
+    step: "02",
+    title: "Write to Tape",
+    desc: "Assets are written to IBM LTO tape using Symply PRO or MagStar hardware with dual verification."
+  },
+  {
+    step: "03",
+    title: "Index & Catalog",
+    desc: "Full metadata record created: Tape ID, generation, hardware, tape position, and write date."
+  },
+  {
+    step: "04",
+    title: "Access & Retrieve",
+    desc: "Browse your catalog through the client portal. Request retrieval — tracked from Pending to Delivered."
+  }
+];
+function AnimatedHeading({ text }) {
+  const words = text.split(" ");
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    motion.h1,
+    {
+      initial: "hidden",
+      animate: "visible",
+      variants: {
+        hidden: {},
+        visible: { transition: { staggerChildren: 0.08 } }
+      },
+      className: "font-display font-bold leading-tight tracking-tight text-black",
+      style: { fontSize: "clamp(3.5rem, 10vw, 8rem)" },
+      children: words.map((word) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+        motion.span,
+        {
+          variants: {
+            hidden: { opacity: 0, y: 24 },
+            visible: {
+              opacity: 1,
+              y: 0,
+              transition: { duration: 0.6, ease: "easeOut" }
+            }
+          },
+          className: "inline-block mr-[0.2em]",
+          children: word
+        },
+        word
+      ))
+    }
+  );
+}
+function ServicesPage() {
+  useCinematicScroll();
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    motion.div,
+    {
+      initial: { opacity: 0 },
+      animate: { opacity: 1 },
+      transition: { duration: 0.6 },
+      style: { background: LIGHT_ORANGE, minHeight: "100vh", color: "#111" },
+      children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          "section",
+          {
+            className: "px-6 md:px-16 pt-12 pb-20",
+            style: {
+              background: LIGHT_ORANGE,
+              borderBottom: "1px solid rgba(0,0,0,0.08)"
+            },
+            "data-ocid": "services_page.hero",
+            children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                motion.div,
+                {
+                  initial: { opacity: 0, y: -8 },
+                  animate: { opacity: 1, y: 0 },
+                  transition: { duration: 0.4 },
+                  className: "mb-10",
+                  children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                    Link,
+                    {
+                      to: "/",
+                      className: "inline-flex items-center gap-2 text-[11px] font-semibold font-body tracking-[0.22em] uppercase text-[#3d3d3d] hover:text-black transition-smooth",
+                      "data-ocid": "services_page.back_link",
+                      children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowLeft, { className: "w-4 h-4" }),
+                        "Back to Home"
+                      ]
+                    }
+                  )
+                }
+              ),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-6 max-w-4xl", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  motion.span,
+                  {
+                    initial: { opacity: 0 },
+                    animate: { opacity: 1 },
+                    transition: { duration: 0.5, delay: 0.1 },
+                    className: "text-[11px] font-semibold font-body tracking-[0.22em] uppercase text-[#3d3d3d]",
+                    children: "WeVirtual"
+                  }
+                ),
+                /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  motion.div,
+                  {
+                    initial: { clipPath: "inset(0 100% 0 0)" },
+                    animate: { clipPath: "inset(0 0% 0 0)" },
+                    transition: { duration: 1.1, ease: CUSTOM_EASE, delay: 0.15 },
+                    children: /* @__PURE__ */ jsxRuntimeExports.jsx(AnimatedHeading, { text: "Our Services" })
+                  }
+                ),
+                /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  motion.p,
+                  {
+                    initial: { opacity: 0, y: 30 },
+                    animate: { opacity: 1, y: 0 },
+                    transition: { delay: 0.5, duration: 0.8 },
+                    className: "font-body text-base md:text-xl leading-relaxed max-w-2xl",
+                    style: { color: "#2d2d2d" },
+                    children: "From acquisition to retrieval, WeVirtual is your end-to-end media archiving partner — combining enterprise LTO hardware with an intelligent access platform."
+                  }
+                )
+              ] })
+            ]
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "section",
+          {
+            className: "px-6 md:px-16 py-24",
+            style: {
+              background: PASTEL_GREEN,
+              borderBottom: "1px solid rgba(0,0,0,0.08)"
+            },
+            "data-ocid": "services_page.cards_section",
+            children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+              motion.div,
+              {
+                initial: "hidden",
+                whileInView: "visible",
+                viewport: { once: true, margin: "-80px" },
+                variants: stagger,
+                className: "flex flex-col gap-8",
+                children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs(motion.div, { variants: fadeUp, className: "flex flex-col gap-3", children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-[11px] font-semibold font-body tracking-[0.22em] uppercase text-[#3d3d3d]", children: "What We Do" }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("hr", { style: { borderColor: "rgba(0,0,0,0.1)" } })
+                  ] }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "grid grid-cols-1 md:grid-cols-2 gap-6", children: SERVICES_DETAIL.map((svc, i) => {
+                    const Icon2 = svc.icon;
+                    return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                      motion.div,
+                      {
+                        initial: { opacity: 0, y: 50, scale: 0.95 },
+                        whileInView: { opacity: 1, y: 0, scale: 1 },
+                        viewport: { once: true, margin: "-60px" },
+                        transition: {
+                          delay: i * 0.15,
+                          duration: 0.75,
+                          ease: CUSTOM_EASE
+                        },
+                        whileHover: {
+                          y: -5,
+                          boxShadow: "0 20px 48px rgba(0,0,0,0.12)",
+                          transition: SPRING_CINEMATIC
+                        },
+                        className: "group flex flex-col gap-5 rounded-xl p-8 md:p-10 border transition-colors duration-300 cursor-default",
+                        style: {
+                          background: PASTEL_GREEN_CARD,
+                          borderColor: "rgba(0,0,0,0.1)"
+                        },
+                        onMouseEnter: (e) => {
+                          e.currentTarget.style.background = PASTEL_GREEN_HOVER;
+                          e.currentTarget.style.borderColor = "rgba(0,0,0,0.2)";
+                        },
+                        onMouseLeave: (e) => {
+                          e.currentTarget.style.background = PASTEL_GREEN_CARD;
+                          e.currentTarget.style.borderColor = "rgba(0,0,0,0.1)";
+                        },
+                        "data-ocid": `services_page.item.${i + 1}`,
+                        children: [
+                          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-start justify-between gap-4", children: [
+                            /* @__PURE__ */ jsxRuntimeExports.jsx(
+                              motion.span,
+                              {
+                                initial: { scale: 0, rotate: -10 },
+                                whileInView: { scale: 1, rotate: 0 },
+                                viewport: { once: true },
+                                transition: {
+                                  ...SPRING_CINEMATIC,
+                                  delay: i * 0.15 + 0.2
+                                },
+                                className: "font-display text-5xl font-bold leading-none",
+                                style: { color: ORANGE },
+                                children: svc.num
+                              }
+                            ),
+                            /* @__PURE__ */ jsxRuntimeExports.jsx(
+                              motion.div,
+                              {
+                                initial: { scale: 0, rotate: -10 },
+                                whileInView: { scale: 1, rotate: 0 },
+                                viewport: { once: true },
+                                transition: {
+                                  ...SPRING_CINEMATIC,
+                                  delay: i * 0.15 + 0.3
+                                },
+                                className: "p-2 rounded-lg",
+                                style: { background: `${ORANGE}18` },
+                                children: /* @__PURE__ */ jsxRuntimeExports.jsx(Icon2, { size: 20, style: { color: ORANGE } })
+                              }
+                            )
+                          ] }),
+                          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-1", children: [
+                            /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { className: "font-display text-2xl font-bold text-black transition-transform duration-300 group-hover:scale-105 origin-left", children: svc.title }),
+                            /* @__PURE__ */ jsxRuntimeExports.jsx(
+                              "p",
+                              {
+                                className: "font-body text-xs uppercase tracking-widest font-semibold",
+                                style: { color: ORANGE },
+                                children: svc.tagline
+                              }
+                            )
+                          ] }),
+                          /* @__PURE__ */ jsxRuntimeExports.jsx(
+                            "p",
+                            {
+                              className: "font-body text-sm leading-relaxed",
+                              style: { color: "#2d2d2d" },
+                              children: svc.desc
+                            }
+                          ),
+                          /* @__PURE__ */ jsxRuntimeExports.jsx(
+                            "ul",
+                            {
+                              className: "flex flex-col gap-2 pt-3 border-t",
+                              style: { borderColor: "rgba(0,0,0,0.08)" },
+                              children: svc.features.map((f) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                                "li",
+                                {
+                                  className: "flex items-center gap-2 font-body text-xs text-[#2d2d2d]",
+                                  children: [
+                                    /* @__PURE__ */ jsxRuntimeExports.jsx(
+                                      "span",
+                                      {
+                                        className: "w-1.5 h-1.5 rounded-full shrink-0",
+                                        style: { background: ORANGE }
+                                      }
+                                    ),
+                                    f
+                                  ]
+                                },
+                                f
+                              ))
+                            }
+                          )
+                        ]
+                      },
+                      svc.num
+                    );
+                  }) })
+                ]
+              }
+            )
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "section",
+          {
+            className: "px-6 md:px-16 py-24",
+            style: {
+              background: LIGHT_ORANGE,
+              borderBottom: "1px solid rgba(0,0,0,0.08)"
+            },
+            "data-ocid": "services_page.process_section",
+            children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+              motion.div,
+              {
+                initial: "hidden",
+                whileInView: "visible",
+                viewport: { once: true, margin: "-80px" },
+                variants: stagger,
+                className: "flex flex-col gap-12",
+                children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs(motion.div, { variants: fadeUp, className: "flex flex-col gap-4", children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-[11px] font-semibold font-body tracking-[0.22em] uppercase text-[#3d3d3d]", children: "Process" }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("hr", { style: { borderColor: "rgba(0,0,0,0.1)" } }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(
+                      "h2",
+                      {
+                        className: "font-display font-bold leading-tight tracking-tight text-black",
+                        style: { fontSize: "clamp(2rem, 5vw, 4rem)" },
+                        children: "How It Works"
+                      }
+                    )
+                  ] }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    motion.div,
+                    {
+                      variants: stagger,
+                      className: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6",
+                      children: PROCESS_STEPS.map((s2, i) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                        motion.div,
+                        {
+                          initial: { opacity: 0, x: -40 },
+                          whileInView: { opacity: 1, x: 0 },
+                          viewport: { once: true, margin: "-40px" },
+                          transition: {
+                            delay: i * 0.2,
+                            duration: 0.7,
+                            ease: CUSTOM_EASE
+                          },
+                          className: "flex flex-col gap-4 p-6 border border-black/10",
+                          style: { background: PASTEL_GREEN_CARD },
+                          "data-ocid": `services_page.process.${i + 1}`,
+                          children: [
+                            /* @__PURE__ */ jsxRuntimeExports.jsx(
+                              motion.span,
+                              {
+                                initial: { scale: 0, rotate: -10 },
+                                whileInView: { scale: 1, rotate: 0 },
+                                viewport: { once: true },
+                                transition: { ...SPRING_CINEMATIC, delay: i * 0.2 + 0.1 },
+                                className: "font-display text-4xl font-bold",
+                                style: { color: ORANGE },
+                                children: s2.step
+                              }
+                            ),
+                            /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { className: "font-display text-xl font-bold text-black", children: s2.title }),
+                            /* @__PURE__ */ jsxRuntimeExports.jsx(
+                              "p",
+                              {
+                                className: "font-body text-sm leading-relaxed",
+                                style: { color: "#2d2d2d" },
+                                children: s2.desc
+                              }
+                            )
+                          ]
+                        },
+                        s2.step
+                      ))
+                    }
+                  )
+                ]
+              }
+            )
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "section",
+          {
+            className: "px-6 md:px-16 py-28",
+            style: { background: PASTEL_GREEN },
+            "data-ocid": "services_page.cta_section",
+            children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+              motion.div,
+              {
+                initial: { opacity: 0, scale: 0.92 },
+                whileInView: { opacity: 1, scale: 1 },
+                viewport: { once: true, margin: "-80px" },
+                transition: { duration: 1, ease: [0.16, 1, 0.3, 1] },
+                className: "flex flex-col md:flex-row items-start md:items-end justify-between gap-10",
+                children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-4", children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                      motion.h2,
+                      {
+                        initial: { clipPath: "inset(0 100% 0 0)" },
+                        whileInView: { clipPath: "inset(0 0% 0 0)" },
+                        viewport: { once: true },
+                        transition: { duration: 1.1, ease: CUSTOM_EASE, delay: 0.1 },
+                        className: "font-display font-bold leading-tight tracking-tight text-black",
+                        style: { fontSize: "clamp(2.5rem, 7vw, 6rem)" },
+                        children: [
+                          "Ready to archive",
+                          /* @__PURE__ */ jsxRuntimeExports.jsx("br", {}),
+                          "your media?"
+                        ]
+                      }
+                    ),
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(
+                      motion.p,
+                      {
+                        initial: { opacity: 0, y: 30 },
+                        whileInView: { opacity: 1, y: 0 },
+                        viewport: { once: true },
+                        transition: { delay: 0.4, duration: 0.8 },
+                        className: "font-body text-base md:text-lg max-w-lg leading-relaxed",
+                        style: { color: "#3d3d3d" },
+                        children: "Get in touch with the WeVirtual team to discuss your archiving requirements and get a tailored solution."
+                      }
+                    )
+                  ] }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    motion.div,
+                    {
+                      initial: { opacity: 0, y: 20 },
+                      whileInView: { opacity: 1, y: 0 },
+                      viewport: { once: true },
+                      transition: { delay: 0.5, duration: 0.6 },
+                      className: "shrink-0",
+                      children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                        "a",
+                        {
+                          href: "mailto:sharad@wevirtual.cloud",
+                          className: "inline-flex items-center gap-3 border border-black/60 px-8 py-4 text-sm font-body font-semibold uppercase tracking-widest text-black hover:bg-black hover:text-white transition-smooth",
+                          "data-ocid": "services_page.contact_button",
+                          children: [
+                            "Get in touch ",
+                            /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowRight, { size: 14 })
+                          ]
+                        }
+                      )
+                    }
+                  )
+                ]
+              }
+            )
+          }
+        )
+      ]
+    }
+  );
 }
 const rootRoute = createRootRoute({
   component: () => /* @__PURE__ */ jsxRuntimeExports.jsx(Layout, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(Outlet, {}) })
@@ -44683,15 +47739,27 @@ const projectDetailRoute = createRoute({
   path: "/projects/$id",
   component: ProjectDetailPage
 });
+const blogRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/blog",
+  component: BlogPage
+});
 const articleDetailRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/articles/$id",
   component: ArticleDetailPage
 });
+const servicesRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/services",
+  component: ServicesPage
+});
 const routeTree = rootRoute.addChildren([
   homeRoute,
   projectDetailRoute,
-  articleDetailRoute
+  blogRoute,
+  articleDetailRoute,
+  servicesRoute
 ]);
 const router = createRouter({ routeTree });
 function App() {

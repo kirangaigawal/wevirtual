@@ -7,8 +7,10 @@ import {
 } from "@tanstack/react-router";
 import { Layout } from "./components/Layout";
 import ArticleDetailPage from "./pages/ArticleDetailPage";
+import BlogPage from "./pages/BlogPage";
 import HomePage from "./pages/HomePage";
 import ProjectDetailPage from "./pages/ProjectDetailPage";
+import ServicesPage from "./pages/ServicesPage";
 
 const rootRoute = createRootRoute({
   component: () => (
@@ -33,16 +35,30 @@ const projectDetailRoute = createRoute({
   component: ProjectDetailPage,
 });
 
+const blogRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/blog",
+  component: BlogPage,
+});
+
 const articleDetailRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/articles/$id",
   component: ArticleDetailPage,
 });
 
+const servicesRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/services",
+  component: ServicesPage,
+});
+
 const routeTree = rootRoute.addChildren([
   homeRoute,
   projectDetailRoute,
+  blogRoute,
   articleDetailRoute,
+  servicesRoute,
 ]);
 
 const router = createRouter({ routeTree });

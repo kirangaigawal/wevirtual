@@ -91,20 +91,39 @@ export default {
           to: { height: "0" },
         },
         "section-enter": {
-          from: {
-            opacity: "0",
-            transform: "translateY(12px)",
-          },
-          to: {
-            opacity: "1",
-            transform: "translateY(0)",
-          },
+          from: { opacity: "0", transform: "translateY(12px)" },
+          to:   { opacity: "1", transform: "translateY(0)" },
+        },
+        revealFromMask: {
+          from: { clipPath: "inset(0 100% 0 0)", opacity: "0" },
+          to:   { clipPath: "inset(0 0% 0 0)",   opacity: "1" },
+        },
+        blurReveal: {
+          from: { filter: "blur(16px)", opacity: "0", transform: "translateY(20px)" },
+          to:   { filter: "blur(0)",    opacity: "1", transform: "translateY(0)" },
+        },
+        sectionWipe: {
+          from: { clipPath: "inset(0 0 100% 0)" },
+          to:   { clipPath: "inset(0 0 0% 0)" },
+        },
+        counterRollup: {
+          from: { transform: "translateY(40px)", opacity: "0" },
+          to:   { transform: "translateY(0)",    opacity: "1" },
+        },
+        magneticPulse: {
+          "0%, 100%": { transform: "scale(1)" },
+          "50%":      { transform: "scale(1.08)" },
         },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
-        "accordion-up": "accordion-up 0.2s ease-out",
-        "section-enter": "section-enter 0.6s ease-out forwards",
+        "accordion-up":   "accordion-up 0.2s ease-out",
+        "section-enter":  "section-enter 0.6s ease-out forwards",
+        "reveal-mask":    "revealFromMask 0.9s cubic-bezier(0.77,0,0.175,1) forwards",
+        "blur-reveal":    "blurReveal 1s cubic-bezier(0.16,1,0.3,1) forwards",
+        "section-wipe":   "sectionWipe 0.8s cubic-bezier(0.77,0,0.175,1) forwards",
+        "counter-up":     "counterRollup 0.8s cubic-bezier(0.34,1.56,0.64,1) forwards",
+        "magnetic-pulse": "magneticPulse 2s ease-in-out infinite",
       },
     },
   },

@@ -1,20 +1,36 @@
 import { Link, useRouter } from "@tanstack/react-router";
 import { Menu, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const NAV_LINKS = [
   { label: "Work", href: "/" },
   { label: "About", href: "/#about" },
-  { label: "Articles", href: "/#articles" },
-  { label: "Store", href: "/#store" },
+  { label: "Services", href: "/services" },
+  { label: "Blog", href: "/blog" },
+  { label: "Clients", href: "/#clients" },
+  { label: "Our World", href: "/#culture" },
+  { label: "Contact Us", href: "/#contact" },
 ];
 
 function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [navHidden, setNavHidden] = useState(false);
+  const router = useRouter();
+  const headerRef = useRef<HTMLElement>(null);
+  const lastScrollY = useRef(0);
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 40);
+    const handleScroll = () => {
+      const currentY = window.scrollY;
+      setScrolled(currentY > 50);
+      if (currentY > 100) {
+        setNavHidden(currentY > lastScrollY.current);
+      } else {
+        setNavHidden(false);
+      }
+      lastScrollY.current = currentY;
+    };
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
@@ -23,28 +39,43 @@ function Header() {
     setMenuOpen(false);
     if (href.startsWith("/#")) {
       const id = href.replace("/#", "");
-      const el = document.getElementById(id);
-      if (el) el.scrollIntoView({ behavior: "smooth" });
+      const isHome = router.state.location.pathname === "/";
+      if (!isHome) {
+        router.navigate({ to: "/" }).then(() => {
+          setTimeout(() => {
+            const el = document.getElementById(id);
+            if (el) el.scrollIntoView({ behavior: "smooth" });
+          }, 100);
+        });
+      } else {
+        const el = document.getElementById(id);
+        if (el) el.scrollIntoView({ behavior: "smooth" });
+      }
     }
   };
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-smooth ${
+      ref={headerRef}
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-400 ${
         scrolled
-          ? "bg-background/95 backdrop-blur-sm border-b border-border"
+          ? "bg-[#fff4e4]/92 backdrop-blur-sm border-b border-black/10 shadow-sm"
           : "bg-transparent"
-      }`}
+      } ${navHidden ? "nav-hidden" : "nav-visible"}`}
       data-ocid="header"
     >
       <div className="max-w-screen-xl mx-auto px-6 md:px-10 flex items-center justify-between h-16 md:h-20">
-        {/* Logo / Agency Name */}
+        {/* Logo */}
         <Link
           to="/"
-          className="font-display font-bold text-lg md:text-xl tracking-tight text-foreground hover:opacity-70 transition-smooth"
+          className="hover:opacity-80 transition-smooth flex items-center"
           data-ocid="header.logo_link"
         >
-          WeVirtual
+          <img
+            src="/assets/images/wevirtual-logo-new.png"
+            alt="WeVirtual"
+            style={{ height: "48px", width: "auto", background: "transparent" }}
+          />
         </Link>
 
         {/* Desktop Nav */}
@@ -62,8 +93,8 @@ function Header() {
                   handleNavClick(link.href);
                 }
               }}
-              className="text-label text-foreground hover:opacity-50 transition-smooth"
-              data-ocid={`header.nav.${link.label.toLowerCase()}_link`}
+              className="nav-link text-label text-foreground hover:opacity-50 transition-smooth"
+              data-ocid={`header.nav.${link.label.toLowerCase().replace(/\s/g, "_")}_link`}
             >
               {link.label}
             </a>
@@ -85,7 +116,7 @@ function Header() {
       {/* Mobile Menu */}
       {menuOpen && (
         <div
-          className="md:hidden bg-background border-t border-border px-6 py-6 flex flex-col gap-5"
+          className="md:hidden bg-[#fff4e4]/92 border-t border-black/10 px-6 py-6 flex flex-col gap-5"
           data-ocid="header.mobile_menu"
         >
           {NAV_LINKS.map((link) => (
@@ -97,7 +128,7 @@ function Header() {
                 handleNavClick(link.href);
               }}
               className="text-label text-foreground hover:opacity-50 transition-smooth"
-              data-ocid={`header.mobile_nav.${link.label.toLowerCase()}_link`}
+              data-ocid={`header.mobile_nav.${link.label.toLowerCase().replace(/\s/g, "_")}_link`}
             >
               {link.label}
             </a>
@@ -118,7 +149,7 @@ function Footer() {
     <footer
       className="py-12 px-6 md:px-10 border-t"
       style={{
-        background: "#ffe0a8",
+        background: "linear-gradient(160deg, #ffe8c4 0%, #ffd8a0 100%)",
         borderColor: "rgba(0,0,0,0.10)",
         color: "#111111",
       }}
@@ -126,18 +157,23 @@ function Footer() {
     >
       <div className="max-w-screen-xl mx-auto flex flex-col md:flex-row items-start justify-between gap-10">
         <div className="flex flex-col gap-1">
-          <p className="font-display font-bold text-xl mb-1 text-black">
-            WeVirtual
-          </p>
-          <p
-            className="text-sm font-body"
-            style={{ color: "rgba(0,0,0,0.55)" }}
-          >
+          <div className="mb-2">
+            <img
+              src="/assets/images/wevirtual-logo-new.png"
+              alt="WeVirtual"
+              style={{
+                height: "60px",
+                width: "auto",
+                background: "transparent",
+              }}
+            />
+          </div>
+          <p className="text-sm font-body" style={{ color: "#333333" }}>
             Media Asset Management — Offline LTO & Cloud
           </p>
           <p
             className="text-xs font-body mt-3 leading-relaxed"
-            style={{ color: "rgba(0,0,0,0.48)" }}
+            style={{ color: "#444444" }}
           >
             Web Emerging Technologies Pvt Ltd
             <br />
@@ -145,25 +181,16 @@ function Footer() {
             <br />
             Wadachiwadi Road, Undri, Pune 411060
           </p>
-          <p
-            className="text-xs font-body mt-1"
-            style={{ color: "rgba(0,0,0,0.48)" }}
-          >
+          <p className="text-xs font-body mt-1" style={{ color: "#444444" }}>
             Contact: Sharad Deshmukh
           </p>
-          <p
-            className="text-xs font-body"
-            style={{ color: "rgba(0,0,0,0.48)" }}
-          >
+          <p className="text-xs font-body" style={{ color: "#444444" }}>
             Mobile: 9823312123, 9769295026
           </p>
         </div>
 
         <div className="flex flex-col items-start md:items-end gap-2 md:mt-1">
-          <p
-            className="text-xs font-body"
-            style={{ color: "rgba(0,0,0,0.45)" }}
-          >
+          <p className="text-xs font-body" style={{ color: "#444444" }}>
             © {year}.{" "}
             <a
               href={`https://caffeine.ai?utm_source=caffeine-footer&utm_medium=referral&utm_content=${hostname}`}
@@ -185,11 +212,75 @@ interface LayoutProps {
   children: React.ReactNode;
 }
 
+// Watermark instances spaced every 100vh to cover the full scrollable height of any page
+const WATERMARK_OFFSETS = [
+  "10vh",
+  "110vh",
+  "210vh",
+  "310vh",
+  "410vh",
+  "510vh",
+  "610vh",
+  "710vh",
+  "810vh",
+  "910vh",
+];
+
 export function Layout({ children }: LayoutProps) {
   return (
-    <div className="min-h-screen flex flex-col bg-background text-foreground">
+    <div
+      className="min-h-screen flex flex-col"
+      style={{
+        background:
+          "linear-gradient(160deg, #fff8ee 0%, #fff0d8 40%, #ffe4b8 100%)",
+        position: "relative",
+      }}
+    >
+      {/* Watermark container — absolutely positioned so logos scroll WITH the page */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          width: "100%",
+          height: "100%",
+          zIndex: 0,
+          pointerEvents: "none",
+          userSelect: "none",
+          overflow: "hidden",
+        }}
+      >
+        {WATERMARK_OFFSETS.map((top) => (
+          <img
+            key={top}
+            src="/assets/images/wevirtual-logo-new.png"
+            alt=""
+            aria-hidden="true"
+            style={{
+              position: "absolute",
+              top,
+              left: "50%",
+              transform: "translateX(-50%)",
+              width: "65vw",
+              maxWidth: "850px",
+              height: "auto",
+              opacity: 0.16,
+              pointerEvents: "none",
+              userSelect: "none",
+              objectFit: "contain",
+            }}
+          />
+        ))}
+      </div>
+
       <Header />
-      <main className="flex-1 pt-16 md:pt-20">{children}</main>
+      <main
+        className="flex-1 pt-16 md:pt-20 page-enter"
+        style={{ position: "relative", zIndex: 1 }}
+      >
+        {children}
+      </main>
       <Footer />
     </div>
   );
